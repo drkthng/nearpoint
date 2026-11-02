@@ -3,6 +3,7 @@
 // Contract: identical math to src/core/luminance.ts gaborValue + toCode8, so the CPU reference
 // renderer can be used to test GPU output pixel-for-pixel (within dithering noise).
 precision highp float;
+precision highp int; // PCG dither hash and uSeed need 32-bit uint arithmetic (default int precision in fragment shaders is mediump)
 
 const int MAX_PATCHES = 12;
 uniform int   uCount;

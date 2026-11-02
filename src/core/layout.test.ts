@@ -54,10 +54,13 @@ describe("layout", () => {
         const ps = stimulusPatches(p);
         expect(ps).toHaveLength(1 + n);
         const b = barAxis(th), c = carrierAxis(th);
+        expect(ps[0].x).toBe(p.cx);
+        expect(ps[0].y).toBe(p.cy);
+        expect(ps[0].contrast).toBe(p.targetContrast);
         ps.slice(1).forEach((f, k) => {
           const d = [f.x - p.cx, f.y - p.cy];
-          expect(Math.round(dot(d, b) / 48) + 0).toBe(order[k][0]);
-          expect(Math.round(dot(d, c) / 48) + 0).toBe(order[k][1]);
+          expect(Math.abs(dot(d, b) - order[k][0] * 48)).toBeLessThan(0.01);
+          expect(Math.abs(dot(d, c) - order[k][1] * 48)).toBeLessThan(0.01);
         });
         for (let a = 0; a < ps.length; a++) {
           for (let e = a + 1; e < ps.length; e++) {

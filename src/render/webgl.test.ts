@@ -38,6 +38,7 @@ describe("shader sources", () => {
   it("satisfies the shader contract", () => {
     expect(FRAGMENT_SHADER_SRC).toContain("const int MAX_PATCHES = 12;");
     expect(FRAGMENT_SHADER_SRC).toMatch(/uniform\s+uint\s+uSeed;/);
+    expect(FRAGMENT_SHADER_SRC).toMatch(/precision\s+highp\s+int;/);
     expect(FRAGMENT_SHADER_SRC).toContain("12.25 * uSigma * uSigma");
     for (const n of ["uCount", "uCenter", "uContrast", "uLambda", "uSigma", "uCarrier", "uMean", "uViewportH", "uSeed"]) {
       expect(FRAGMENT_SHADER_SRC).toContain(n);

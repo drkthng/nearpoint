@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { barAxis, carrierAxis, carrierRad } from "../core/layout";
 import { srgbEncode, toCode8 } from "../core/luminance";
 import { renderCpu, type CpuRenderOptions } from "./cpu";
 
@@ -62,6 +63,23 @@ describe("renderCpu", () => {
     expect(range(rowVals(b))).toBeLessThan(0.01 * range(colVals(b)));
   });
 
+  it("bars run along barAxis for 45 and 135 degrees", () => {
+    for (const th of [0, 45, 90, 135]) {
+      const r = renderCpu(base({ sigmaPx: 320, carrierRad: carrierRad(th) }));
+      const b = barAxis(th), c = carrierAxis(th);
+      const sample = (a: [number, number]) => {
+        const v: number[] = [];
+        for (let k = -8; k <= 8; k++) {
+          v.push(r.linear[(128 + k * Math.round(a[1])) * N + 128 + k * Math.round(a[0])]);
+        }
+        return v;
+      };
+      const along = range(sample(b)), across = range(sample(c));
+      expect(along).toBeLessThan(0.01 * across);
+      expect(across).toBeGreaterThan(0.0214);
+    }
+  });
+
   it("4. far field is mean grey; undithered codes use u=0.5; alpha 255", () => {
     const r = renderCpu(base({ patches: patchAt(0.5) }));
     expect(Math.abs(r.linear[5 * N + 5] - 0.214)).toBeLessThan(1e-6);
@@ -79,7 +97,7 @@ describe("renderCpu", () => {
       expect(r.rgba[4 * i + 1]).toBe(r.rgba[4 * i]);
       expect(r.rgba[4 * i + 2]).toBe(r.rgba[4 * i]);
     }
-    expect(Math.abs(sum / (N * N) - srgbEncode(0.214) * 255)).toBeLessThan(0.05);
+    expect(Math.abs(sum / (N * N) - srgbEncode(0.214) * 255)).toBeLessThan(0.01);
   });
 
   it("6. dithering is unbiased over a patch region", () => {

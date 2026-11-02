@@ -41,7 +41,7 @@ const nextSeed = (): number => Math.floor(rng() * 4294967296);
 
 function render(w: number, h: number): void {
   const distanceMm = params.distanceCm * 10;
-  const lines: string[] = ["nearpoint debug — personal research tool, not a medical device", rendererLine];
+  const lines: string[] = ["nearpoint debug — personal research tool, not a medical device; have your eyes examined by a professional", rendererLine];
   try {
     const lam = lambdaPx(params.cpd, distanceMm, params.pxPerMm);
     const sigma = lam;
