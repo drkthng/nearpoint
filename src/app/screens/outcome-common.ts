@@ -2,6 +2,7 @@
 import type { Calibration, OutcomeTestRow } from "../../data/schema";
 import type { AppContext } from "../context";
 import { h } from "../dom";
+import { keepScreenOn } from "../wake-lock";
 
 export class Stopped extends Error {
   constructor(readonly reason: string) {
@@ -75,7 +76,7 @@ export async function needCalibration(ctx: AppContext, root: HTMLElement): Promi
 
 /** Fullscreen, landscape lock and screen wake lock (all optional); body.training for a bare page. Call from a user gesture. */
 export function enterTestDisplay(run: TestRun): void {
-  let wakeLock: { release(): Promise<void> } | null = null;
+  const releaseWakeLock = keepScreenOn();
   try {
     void document.documentElement.requestFullscreen().catch(() => undefined);
   } catch {
@@ -83,16 +84,6 @@ export function enterTestDisplay(run: TestRun): void {
   }
   try {
     void screen.orientation.lock("landscape").catch(() => undefined);
-  } catch {
-    /* ignored */
-  }
-  try {
-    void navigator.wakeLock
-      ?.request("screen")
-      .then((s) => {
-        wakeLock = s;
-      })
-      .catch(() => undefined);
   } catch {
     /* ignored */
   }
@@ -104,11 +95,7 @@ export function enterTestDisplay(run: TestRun): void {
     } catch {
       /* ignored */
     }
-    try {
-      void (wakeLock as { release(): Promise<void> } | null)?.release().catch(() => undefined);
-    } catch {
-      /* ignored */
-    }
+    releaseWakeLock();
   });
 }
 

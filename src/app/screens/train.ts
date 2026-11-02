@@ -18,6 +18,7 @@ import type { AppContext } from "../context";
 import { clear, h } from "../dom";
 import { measureRefreshNow, waitFrames } from "../frames";
 import { playFrames } from "../player";
+import { keepScreenOn } from "../wake-lock";
 
 const CONDITION_WORDS: Record<Condition, string> = {
   SINGLE: "Single target",
@@ -161,7 +162,7 @@ async function runTrain(
   // ---- start (user gesture) ----
   const audio = createFeedbackAudio();
   audio.unlock();
-  let wakeLock: { release(): Promise<void> } | null = null;
+  const releaseWakeLock = keepScreenOn();
   try {
     void document.documentElement.requestFullscreen().catch(() => undefined);
   } catch {
@@ -172,17 +173,6 @@ async function runTrain(
   } catch {
     /* ignored */
   }
-  try {
-    void navigator.wakeLock
-      ?.request("screen")
-      .then((s) => {
-        wakeLock = s;
-      })
-      .catch(() => undefined);
-  } catch {
-    /* ignored */
-  }
-
   document.body.classList.add("training");
   clear(root);
   const canvas = document.createElement("canvas");
@@ -222,11 +212,7 @@ async function runTrain(
     } catch {
       /* ignored */
     }
-    try {
-      void (wakeLock as { release(): Promise<void> } | null)?.release().catch(() => undefined);
-    } catch {
-      /* ignored */
-    }
+    releaseWakeLock();
   };
 
   // ---- response handling ----

@@ -15,6 +15,7 @@ import { validateCurriculum, type Curriculum } from "./core/protocol";
 import { openDb } from "./data/db";
 import type { SessionRow } from "./data/schema";
 import { requestPersistence } from "./data/persist";
+import { registerServiceWorker } from "./pwa/register";
 
 const root = document.getElementById("app") as HTMLElement;
 
@@ -56,6 +57,17 @@ async function boot(): Promise<void> {
   } catch {
     /* best effort */
   }
+
+  // Offline support. An update waits until the user reloads outside a session or test.
+  registerServiceWorker((activate) => {
+    const b = banner("A new version of nearpoint is ready. ", h("button", {
+      onclick: () => {
+        if (document.body.classList.contains("training")) return; // never mid-session
+        b.remove();
+        activate();
+      },
+    }, "Reload"));
+  });
 
   const persistence = await requestPersistence();
   const ctx: AppContext = {

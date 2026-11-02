@@ -4,6 +4,11 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <title>nearpoint</title>
+    <meta name="description" content="Personal research tool for near-vision perceptual learning. Not a medical device." />
+    <meta name="theme-color" content="#777777" />
+    <link rel="manifest" href="./manifest.webmanifest" />
+    <link rel="icon" href="./icon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="./icon-192.png" />
     <style>
       :root { color-scheme: light dark; font-family: system-ui, sans-serif; --bg: #fff; --fg: #1a1a1a; --line: #c8c8c8; --card: #f3f3f3; --accent: #2a6fdb; }
       @media (prefers-color-scheme: dark) { :root { --bg: #121212; --fg: #e8e8e8; --line: #444; --card: #1e1e1e; --accent: #6ea2f5; } }
@@ -32,10 +37,17 @@
       .bs-cross { position: absolute; left: 0; top: 10px; font-size: 28px; line-height: 1; }
       .bs-dot { position: absolute; top: 18px; width: 14px; height: 14px; border-radius: 50%; background: var(--fg); }
       .chart svg { width: 100%; height: auto; }
+      /* Landscape hint: sessions and tests are laid out for landscape. */
+      .rotate-hint { display: none; }
+      @media (orientation: portrait) {
+        body.training .rotate-hint { display: flex; position: fixed; inset: 0; z-index: 1000; align-items: center; justify-content: center;
+          padding: 2rem; text-align: center; background: #777; color: #111; font-size: 1.5rem; }
+      }
     </style>
   </head>
   <body>
     <main id="app"></main>
+    <div class="rotate-hint" role="alert">Turn the phone to landscape.</div>
     <script type="module" src="/src/main.ts"></script>
   </body>
 </html>
