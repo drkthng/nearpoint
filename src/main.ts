@@ -6,9 +6,10 @@ import { renderCalibrate } from "./app/screens/calibrate";
 import { renderData } from "./app/screens/data";
 import { renderHistory } from "./app/screens/history";
 import { renderStart } from "./app/screens/start";
-import { renderTrain } from "./app/screens/train";
+import { leaveTraining, renderTrain } from "./app/screens/train";
 import { validateCurriculum, type Curriculum } from "./core/protocol";
 import { openDb } from "./data/db";
+import type { SessionRow } from "./data/schema";
 import { requestPersistence } from "./data/persist";
 
 const root = document.getElementById("app") as HTMLElement;
@@ -34,6 +35,23 @@ async function boot(): Promise<void> {
     },
   });
   blocked.el?.remove();
+
+  // No session can be running at boot: anything still "in-progress" was interrupted.
+  try {
+    for (const s of await db.all<SessionRow>("sessions")) {
+      if (s.status === "in-progress") {
+        await db.put("sessions", {
+          ...s,
+          id: s.id as number,
+          status: "aborted",
+          endedAt: new Date().toISOString(),
+          abortReason: "interrupted (app closed or reloaded)",
+        });
+      }
+    }
+  } catch {
+    /* best effort */
+  }
 
   const persistence = await requestPersistence();
   const ctx: AppContext = {
@@ -63,7 +81,8 @@ async function boot(): Promise<void> {
       root.append(h("h1", {}, "nearpoint"), h("p", {}, `Something went wrong: ${e instanceof Error ? e.message : String(e)}`));
     }
   };
-  window.addEventListener("hashchange", () => void render());
+  // Leaving #train mid-session: wait until the session is saved as aborted before rendering the next route.
+  window.addEventListener("hashchange", () => void leaveTraining().then(render));
   await render();
 }
 

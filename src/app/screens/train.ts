@@ -59,7 +59,38 @@ function relativeText(threshold: number | null, past: readonly number[]): string
   return s.relativeIndexPct >= 0 ? `${p} % lower than your median` : `${p} % higher than your median`;
 }
 
+let active: { stop(reason: string): void; done: Promise<void> } | null = null;
+
+/** Called by the router before it renders another route: stops a running session and resolves once it is saved as aborted. */
+export function leaveTraining(): Promise<void> {
+  if (!active) return Promise.resolve();
+  active.stop("left the training screen");
+  return active.done;
+}
+
 export async function renderTrain(ctx: AppContext, root: HTMLElement, query: URLSearchParams): Promise<void> {
+  let resolveDone: () => void = () => undefined;
+  const done = new Promise<void>((res) => {
+    resolveDone = res;
+  });
+  const mine: { stop(reason: string): void; done: Promise<void> } = { stop: () => undefined, done };
+  try {
+    await runTrain(ctx, root, query, (stop) => {
+      mine.stop = stop;
+      active = mine;
+    });
+  } finally {
+    if (active === mine) active = null;
+    resolveDone();
+  }
+}
+
+async function runTrain(
+  ctx: AppContext,
+  root: HTMLElement,
+  query: URLSearchParams,
+  register: (stop: (reason: string) => void) => void,
+): Promise<void> {
   const quick = query.get("quick") === "1";
   const auto = quick && query.get("auto") === "1";
   const trialsOverride = quick ? Math.max(1, Math.floor(Number(query.get("trials") ?? 6)) || 6) : null;
@@ -99,6 +130,7 @@ export async function renderTrain(ctx: AppContext, root: HTMLElement, query: URL
     controller?.abort();
     rejectStopped(new Stopped(reason));
   };
+  register(stop);
   const onHash = (): void => stop("left the training screen");
   window.addEventListener("hashchange", onHash);
 
@@ -161,6 +193,7 @@ export async function renderTrain(ctx: AppContext, root: HTMLElement, query: URL
   const stopFit = fitCanvasToDevicePixels(canvas, (w, hh) => {
     cw = w;
     ch = hh;
+    controller?.abort(); // a resize mid-trial invalidates it; the pause path discards the trial
   });
   cw = canvas.width;
   ch = canvas.height;
@@ -222,7 +255,23 @@ export async function renderTrain(ctx: AppContext, root: HTMLElement, query: URL
     return el;
   };
   const respBtn = (label: string, side: "left" | "right", v: 1 | 2): HTMLButtonElement => {
-    const b = h("button", { onclick: () => respond(v), "aria-label": `Interval ${label}` }, label);
+    const b = h(
+      "button",
+      {
+        "aria-label": `Interval ${label}`,
+        onclick: (ev) => {
+          // detail === 0: a keyboard-activated click (Enter/Space); only taps and the 1/2/arrow keys answer.
+          if ((ev as MouseEvent).detail === 0) return;
+          b.blur();
+          respond(v);
+        },
+        onkeydown: (ev) => {
+          const k = (ev as KeyboardEvent).key;
+          if (k === "Enter" || k === " ") ev.preventDefault();
+        },
+      },
+      label,
+    );
     style(b, {
       position: "fixed", top: "0", bottom: "0", [side]: "0", width: "50%", minHeight: "0", borderRadius: "0",
       background: "transparent", border: "1px solid rgba(0,0,0,0.15)", color: "rgba(0,0,0,0.35)", fontSize: "20vh", zIndex: "20",
@@ -232,9 +281,9 @@ export async function renderTrain(ctx: AppContext, root: HTMLElement, query: URL
   const responseUi = addOverlay(h("div", {}, respBtn("1", "left", 1), respBtn("2", "right", 2)));
   responseUi.style.display = "none";
   const counter = addOverlay(h("div", {}));
-  style(counter, { position: "fixed", left: "8px", bottom: "8px", zIndex: "30", font: "14px system-ui, sans-serif", color: "rgba(0,0,0,0.7)", pointerEvents: "none" });
+  style(counter, { position: "fixed", left: "8px", bottom: "8px", zIndex: "30", font: "24px system-ui, sans-serif", color: "rgba(0,0,0,0.75)", pointerEvents: "none" });
   const message = addOverlay(h("div", {}));
-  style(message, { position: "fixed", left: "0", right: "0", top: "70%", textAlign: "center", zIndex: "30", font: "20px system-ui, sans-serif", color: "#111", pointerEvents: "none" });
+  style(message, { position: "fixed", left: "0", right: "0", top: "70%", textAlign: "center", zIndex: "30", font: "24px system-ui, sans-serif", color: "#111", pointerEvents: "none" });
   const ring = addOverlay(h("div", {}));
   const dpr = window.devicePixelRatio || 1;
   const distanceMm = cal.distanceCm * 10;
@@ -250,10 +299,11 @@ export async function renderTrain(ctx: AppContext, root: HTMLElement, query: URL
     fixationOn = on;
     ring.style.display = on ? "block" : "none";
   };
-  const stopBtn = h("button", { onclick: () => {
+  const confirmStop = (): void => {
     if (confirm("Stop this session?")) stop("stopped by user");
-  } }, "Stop");
-  style(stopBtn, { position: "fixed", top: "8px", right: "8px", zIndex: "40", opacity: "0.6" });
+  };
+  const stopBtn = h("button", { onclick: confirmStop }, "Stop");
+  style(stopBtn, { position: "fixed", top: "8px", right: "8px", zIndex: "60", opacity: "0.6" });
   addOverlay(stopBtn);
 
   // ---- session state ----
@@ -261,11 +311,32 @@ export async function renderTrain(ctx: AppContext, root: HTMLElement, query: URL
   const summary: BlockSummaryRow[] = [];
   let totalInvalid = 0;
 
+  // The block in progress, so a stop/abort/error can save its partial counts.
+  let currentBlock: { row: BlockRow; id: number; runner: BlockRunner } | null = null;
+  const flushBlock = async (): Promise<void> => {
+    const cb = currentBlock;
+    if (!cb) return;
+    const res = cb.runner.result();
+    try {
+      await ctx.db.put("blocks", {
+        ...cb.row,
+        id: cb.id,
+        threshold: res.threshold,
+        reversals: res.reversals,
+        validTrials: res.validTrials,
+        invalidTrials: res.invalidTrials,
+      });
+    } catch {
+      /* best effort */
+    }
+  };
+
   const markAborted = async (reason: string): Promise<void> => {
     if (!sessionRow || sessionRow.status !== "in-progress") return;
-    sessionRow = { ...sessionRow, status: "aborted", endedAt: new Date().toISOString(), abortReason: reason };
+    const aborted: SessionRow = { ...sessionRow, status: "aborted", endedAt: new Date().toISOString(), abortReason: reason };
     try {
-      await ctx.db.put("sessions", sessionRow as SessionRow & { id: number });
+      await ctx.db.put("sessions", aborted as SessionRow & { id: number });
+      sessionRow = aborted;
     } catch {
       /* best effort */
     }
@@ -325,7 +396,7 @@ export async function renderTrain(ctx: AppContext, root: HTMLElement, query: URL
         position: "fixed", inset: "0", zIndex: "50", background: OVERLAY_BG, color: "#111", display: "flex", flexDirection: "column",
         alignItems: "center", justifyContent: "center", gap: "0.5rem", padding: "1rem", textAlign: "center", overflow: "auto",
       });
-      el.append(btn);
+      el.append(btn, h("button", { class: "stop-session", onclick: confirmStop }, "Stop session"));
       return { el, btn };
     };
     const showCard = async (label: string, ...children: (Node | string)[]): Promise<void> => {
@@ -352,6 +423,7 @@ export async function renderTrain(ctx: AppContext, root: HTMLElement, query: URL
         h("h2", {}, `Block ${i + 1} of ${blocks.length}`),
         CONDITION_WORDS[block.condition],
         `${block.trials} trials`,
+        "Answer by tapping the left (1) or right (2) half of the screen.",
         ...notes,
       );
       const blockRow: BlockRow = {
@@ -373,6 +445,8 @@ export async function renderTrain(ctx: AppContext, root: HTMLElement, query: URL
       };
       const blockId = await race(ctx.db.add("blocks", blockRow));
       const runner = new BlockRunner(block, ctx.curriculum.staircase, hz, rand);
+      currentBlock = { row: blockRow, id: blockId, runner };
+      updateCounter(1);
 
       while (!runner.done) {
         const s = runner.next();
@@ -390,7 +464,6 @@ export async function renderTrain(ctx: AppContext, root: HTMLElement, query: URL
           nFlankers: block.n_flankers,
         };
         const frames = expandFrames(s.plan);
-        updateCounter(s.trialIndex + 1);
         controller = new AbortController();
         let t0 = 0;
         let log: TrialTimingLog;
@@ -436,7 +509,7 @@ export async function renderTrain(ctx: AppContext, root: HTMLElement, query: URL
         const valid = log.analysis.valid;
         const outcome = runner.record({ response, timingValid: valid });
         if (!valid) totalInvalid++;
-        updateCounter(s.trialIndex + 1);
+        updateCounter(runner.result().attempts + 1);
 
         const trialRow: TrialRow = {
           sessionId,
@@ -484,6 +557,7 @@ export async function renderTrain(ctx: AppContext, root: HTMLElement, query: URL
           invalidTrials: res.invalidTrials,
         }),
       );
+      currentBlock = null;
       const rel = relativeText(res.threshold, pastThresholds(history, block.condition, cpd));
       summary.push({ condition: block.condition, threshold: res.threshold, relative: rel, valid: res.validTrials, invalid: res.invalidTrials });
       drawBlank();
@@ -496,13 +570,14 @@ export async function renderTrain(ctx: AppContext, root: HTMLElement, query: URL
       );
     }
 
-    sessionRow = {
+    const finalRow: SessionRow = {
       ...sessionRow,
       status: quick ? "aborted" : "completed",
       endedAt: new Date().toISOString(),
       ...(quick ? { abortReason: "quick mode (test run)" } : {}),
     };
-    await ctx.db.put("sessions", sessionRow as SessionRow & { id: number });
+    await ctx.db.put("sessions", finalRow as SessionRow & { id: number });
+    sessionRow = finalRow;
     teardown();
 
     clear(root);
@@ -530,6 +605,7 @@ export async function renderTrain(ctx: AppContext, root: HTMLElement, query: URL
     );
   } catch (e) {
     const wasStopped = stopReason !== null;
+    await flushBlock();
     await markAborted(stopReason ?? `error: ${e instanceof Error ? e.message : String(e)}`);
     teardown();
     if (wasStopped) {

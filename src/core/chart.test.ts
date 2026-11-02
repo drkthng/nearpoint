@@ -24,6 +24,15 @@ describe("thresholdChartSvg", () => {
     expect(thresholdChartSvg([])).toContain("No data yet");
     expect(thresholdChartSvg([{ label: "x", points: [{ x: 1, y: null }] }])).toContain("No data yet");
   });
+  it("xLabelOffset shifts axis labels only", () => {
+    const pts = [{ label: "x", points: [{ x: 3, y: 0.03 }] }];
+    const plain = thresholdChartSvg(pts);
+    const shifted = thresholdChartSvg(pts, { xLabelOffset: 1 });
+    expect(plain).toContain(">3</text>");
+    expect(shifted).toContain(">4</text>");
+    expect(shifted).not.toContain(">3</text>");
+    expect(shifted.replace(">4</text>", ">3</text>")).toBe(plain);
+  });
   it("single point and determinism", () => {
     const one = thresholdChartSvg([{ label: "x", points: [{ x: 3, y: 0.03 }] }]);
     expect(one).not.toContain("<polyline");

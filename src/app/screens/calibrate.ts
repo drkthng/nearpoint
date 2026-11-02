@@ -1,4 +1,5 @@
 import {
+  BLIND_SPOT_ANGLE_DEG,
   ID1_CARD_MM,
   blindSpotDistanceMm,
   estimateRefresh,
@@ -54,16 +55,29 @@ export async function renderCalibrate(ctx: AppContext, root: HTMLElement): Promi
     cardBox.style.width = `${width}px`;
     cardBox.style.height = `${(width * ID1_CARD_MM.height) / ID1_CARD_MM.width}px`;
     readout.textContent = `${pxPerMmFromCard(width, dpr).toFixed(3)} px/mm (device px per mm), devicePixelRatio ${dpr}`;
+    updateBsMax();
     update();
   }
 
   // c) distance
-  const distance = h("input", { type: "number", min: 25, max: 60, step: 1, value: 40, oninput: update });
+  const distance = h("input", { type: "number", min: 25, max: 60, step: 1, value: 40, oninput: () => { updateBsMax(); update(); } });
 
   // d) blind spot
   const dot = h("div", { class: "bs-dot" });
   const bsRange = h("input", { type: "range", min: 0, max: 400, step: 1, value: 0, oninput: moveDot });
   const bsOut = h("p", { class: "small" });
+  /** Slider range (CSS px) covers 1.3x the offset a 15° blind-spot angle gives at the entered distance. */
+  function updateBsMax() {
+    const d = Number(distance.value);
+    if (!(d > 0)) return;
+    const pxPerMm = pxPerMmFromCard(width, dpr);
+    const max = Math.max(10, Math.ceil(((d * 10 * Math.tan((BLIND_SPOT_ANGLE_DEG * Math.PI) / 180) * pxPerMm) / dpr) * 1.3));
+    bsRange.max = String(max);
+    if (Number(bsRange.value) > max) {
+      bsRange.value = String(max);
+      moveDot();
+    }
+  }
   function moveDot() {
     dot.style.left = `${Number(bsRange.value)}px`;
   }
@@ -71,10 +85,12 @@ export async function renderCalibrate(ctx: AppContext, root: HTMLElement): Promi
 
   // e) refresh
   const hzOut = h("div", {});
+  const errOut = h("p", { class: "warn" });
   const hzBtn = h("button", {
     onclick: async () => {
       hzBtn.disabled = true;
       hzBtn.textContent = "Measuring…";
+      errOut.textContent = "";
       try {
         refresh = estimateRefresh(await measureTimestamps(121));
         clear(hzOut);
@@ -82,6 +98,8 @@ export async function renderCalibrate(ctx: AppContext, root: HTMLElement): Promi
           h("p", {}, `${refresh.hz} Hz (measured ${refresh.hzMeasured.toFixed(1)} Hz)`),
           ...refreshWarnings(refresh).map((w) => h("p", { class: "warn" }, w)),
         );
+      } catch (e) {
+        errOut.textContent = `Refresh measurement failed: ${e instanceof Error ? e.message : String(e)}`;
       } finally {
         hzBtn.disabled = false;
         hzBtn.textContent = "Measure refresh rate";
@@ -96,6 +114,8 @@ export async function renderCalibrate(ctx: AppContext, root: HTMLElement): Promi
     onclick: async () => {
       const d = Number(distance.value);
       if (!refresh || !(d >= 25 && d <= 60)) return;
+      save.disabled = true;
+      errOut.textContent = "";
       const row: Calibration = {
         createdAt: new Date().toISOString(),
         pxPerMm: pxPerMmFromCard(width, dpr),
@@ -108,7 +128,13 @@ export async function renderCalibrate(ctx: AppContext, root: HTMLElement): Promi
         method: "card",
         userAgent: navigator.userAgent,
       };
-      await ctx.db.add("calibrations", row);
+      try {
+        await ctx.db.add("calibrations", row);
+      } catch (e) {
+        errOut.textContent = `Saving failed: ${e instanceof Error ? e.message : String(e)}`;
+        update();
+        return;
+      }
       ctx.navigate("start");
     },
   }, "Save calibration");
@@ -150,8 +176,9 @@ export async function renderCalibrate(ctx: AppContext, root: HTMLElement): Promi
       }, "Dot disappeared"),
       bsOut),
     section(5, "Refresh rate", hzBtn, hzOut),
-    section(6, "Save", save),
+    section(6, "Save", save, errOut),
     h("button", { onclick: () => ctx.navigate("start") }, "Back"),
   );
   setWidth(width);
+  updateBsMax();
 }

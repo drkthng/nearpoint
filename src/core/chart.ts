@@ -8,6 +8,8 @@ export interface ChartOptions {
   width?: number;
   height?: number;
   title?: string;
+  /** Added to x for the axis labels only (e.g. 1 to show sessionIndex + 1). Default 0. */
+  xLabelOffset?: number;
 }
 
 const PALETTE = ["#2a6fdb", "#d1495b", "#2e8b57", "#e08e0b", "#7b4fd1", "#00838f"];
@@ -59,7 +61,7 @@ export function thresholdChartSvg(series: readonly ChartSeries[], o: ChartOption
   const last = Math.floor(xMax + 1e-9);
   const stride = Math.max(1, Math.ceil((last - first + 1) / 10));
   for (let x = first; x <= last; x += stride) {
-    out.push(`<text x="${f(X(x))}" y="${f(m.t + ph + 16)}" text-anchor="middle" fill="currentColor" font-size="11">${x}</text>`);
+    out.push(`<text x="${f(X(x))}" y="${f(m.t + ph + 16)}" text-anchor="middle" fill="currentColor" font-size="11">${x + (o.xLabelOffset ?? 0)}</text>`);
   }
   out.push(`<text x="${f(m.l + pw / 2)}" y="${f(m.t + ph + 30)}" text-anchor="middle" fill="currentColor" font-size="11">Session</text>`);
   series.forEach((s, i) => {
