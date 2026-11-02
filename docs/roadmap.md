@@ -34,7 +34,7 @@ Read CLAUDE.md and docs/roadmap.md, claim the next eligible session as described
 | S0 | Skeleton | 0 | – | done | `docs/session-notes/S0.md` |
 | S1 | Renderer (WebGL2 + CPU reference), layout, rename | 1 | S0 | done | `docs/session-notes/S1.md` |
 | S2 | Trial engine and frame scheduler | 1 | S0 | done | `docs/session-notes/S2.md` |
-| S3 | Curriculum engine | 1 | S0 | next | |
+| S3 | Curriculum engine | 1 | S0 | in progress (2026-11-02) | |
 | S4 | Data layer | 1 | S0 | next | |
 | S5 | App shell, calibration, training flow | 2 | S1, S2, S3, S4 | blocked | |
 | S6 | Outcome tests | 2 | S5 | blocked | |
