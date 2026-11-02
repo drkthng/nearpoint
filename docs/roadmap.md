@@ -63,7 +63,9 @@ Facts a later session needs that are not obvious from the code. Append under you
 
 Open issues not owned by a scheduled session. Add `(from S<n>)`; remove when resolved, saying where.
 
-- Manual shader check in a real browser: `npm run dev`, open `/debug.html?condition=CROWD&tc=0.3`
-  (operator, any time; otherwise S8 is the first check). (from S1)
+- Shader compiles and renders in desktop Chrome on Windows (operator check, 2 Nov 2026: WebGL2, backing
+  1921×901 at DPR 1.104, CROWD stimulus centred). Still unchecked: iPad Safari (operator) and CI (S8). (from S1)
+- Desktop refresh measured ≈ 30 Hz on the operator's machine (power saving or throttling?). Check on the
+  iPad before relying on frame timing (S2/S5). (from S1)
 - Crowding layouts with more than 8 flankers are undefined. (from S1)
 - `fitCanvasToDevicePixels()` and the WebGL draw path have no unit tests (browser only; S8). (from S1)
