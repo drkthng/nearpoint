@@ -29,10 +29,11 @@ async function boot(): Promise<void> {
   const blocked: { el?: HTMLElement } = {};
   const db = await openDb({
     onBlocked: () => { blocked.el ??= banner("Close other nearpoint tabs to finish the update."); },
+    onVersionChange: () => {
+      banner("nearpoint was updated in another tab. ", h("button", { onclick: () => location.reload() }, "Reload"));
+    },
   });
   blocked.el?.remove();
-  // DEVIATION: NearpointDb does not expose the IDBDatabase, so the "updated in another tab — reload"
-  // banner cannot be wired to versionchange here (db.ts already closes the connection itself).
 
   const persistence = await requestPersistence();
   const ctx: AppContext = {

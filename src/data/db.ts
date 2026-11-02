@@ -18,6 +18,8 @@ export interface OpenOptions {
   migrations?: readonly Migration[];
   /** Called when the open is blocked by another connection (e.g. another tab); the open keeps waiting. */
   onBlocked?: () => void;
+  /** Called after this connection closed itself because another tab upgraded the schema; the app should reload. */
+  onVersionChange?: () => void;
 }
 
 export interface BackupFile {
@@ -66,7 +68,10 @@ export function openDb(o: OpenOptions = {}): Promise<NearpointDb> {
       const db = r.result;
       // Lets another tab upgrade the schema: this connection closes and becomes unusable,
       // so the app should reload when that happens.
-      db.onversionchange = () => db.close();
+      db.onversionchange = () => {
+        db.close();
+        o.onVersionChange?.();
+      };
       resolve(new NearpointDb(db));
     };
     r.onerror = () => reject(r.error);

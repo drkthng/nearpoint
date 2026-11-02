@@ -218,4 +218,17 @@ describe("migrations", () => {
     b.close();
     void a;
   });
+
+  it("onVersionChange is called after the connection closed itself", async () => {
+    const factory = new IDBFactory();
+    let called = 0;
+    const a = await openDb({ name: "vc2", factory, migrations: [MIGRATIONS[0]], onVersionChange: () => called++ });
+    const v2 = (db: IDBDatabase) => {
+      db.createObjectStore("notes", { keyPath: "id", autoIncrement: true });
+    };
+    const b = await openDb({ name: "vc2", factory, migrations: [MIGRATIONS[0], v2] });
+    expect(called).toBe(1);
+    await expect(a.all("sessions")).rejects.toBeTruthy();
+    b.close();
+  });
 });

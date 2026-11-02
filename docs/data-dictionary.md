@@ -57,6 +57,9 @@ data, so call `requestPersistence()` at first run and export backups regularly.
 | `theta_deg` | number | degrees | Gabor orientation for this session. |
 | `change` | string | | What the curriculum changed relative to the previous session. |
 | `reason` | string | | Human-readable reason for the change. |
+| `abort_reason` | string | | Why the session was aborted; empty otherwise. |
+| `rng_seed` | integer | | Seed of the session's mulberry32 stream (trial draws); empty for older sessions. |
+| `app_version` | string | | App version that ran the session; empty for older sessions. |
 
 ## blocks.csv
 
@@ -91,6 +94,7 @@ data, so call `requestPersistence()` at first run and export backups regularly.
 | `contrast` | number | Michelson contrast | Target contrast presented. |
 | `sep_lambda` | number | wavelengths | Target-flanker separation; empty if no flankers. |
 | `isi_ms` | number | ms | Inter-stimulus interval; empty if not applicable. |
+| `flanker_contrast` | number | Michelson contrast | Flanker contrast used in the trial; empty if the condition has no flankers. |
 | `target_interval` | integer | | Interval (1 or 2) that contained the target. |
 | `response` | integer | | Interval chosen by the observer (1 or 2); empty if none. |
 | `correct` | boolean | | 1 if the response matched target_interval; empty if no response. |

@@ -74,6 +74,21 @@ describe("BlockRunner", () => {
     expect(b).toEqual(a);
   });
 
+  it("discard drops the pending trial without counting it", () => {
+    const r = new BlockRunner(BM, SC, 60, mulberry32(3));
+    expect(() => r.discard()).toThrow("no trial pending");
+    const first = r.next();
+    r.discard();
+    const second = r.next();
+    expect(second.trialIndex).toBe(first.trialIndex);
+    expect(second.contrast).toBe(first.contrast);
+    r.record({ response: second.plan.targetInterval, timingValid: true });
+    const res = r.result();
+    expect(res.attempts).toBe(1);
+    expect(res.validTrials).toBe(1);
+    expect(res.invalidTrials).toBe(0);
+  });
+
   it("errors", () => {
     const r = new BlockRunner(BM, SC, 60, mulberry32(1));
     expect(() => r.record({ response: 1, timingValid: true })).toThrow("no trial pending");

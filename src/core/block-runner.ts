@@ -56,6 +56,12 @@ export class BlockRunner {
     return this.pending;
   }
 
+  /** Drops the pending trial without counting it (no attempt, no staircase change), e.g. after an aborted playback. */
+  discard(): void {
+    if (!this.pending) throw new Error("no trial pending");
+    this.pending = null;
+  }
+
   record(o: TrialOutcome): { correct: boolean; counted: boolean } {
     const p = this.pending;
     if (!p) throw new Error("no trial pending");

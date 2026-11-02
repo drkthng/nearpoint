@@ -121,6 +121,9 @@ export const SESSION_COLUMNS: readonly CsvColumn<SessionRow>[] = [
   { name: "theta_deg", get: (r) => r.thetaDeg },
   { name: "change", get: (r) => r.change },
   { name: "reason", get: (r) => r.reason },
+  { name: "abort_reason", get: (r) => r.abortReason },
+  { name: "rng_seed", get: (r) => r.rngSeed },
+  { name: "app_version", get: (r) => r.appVersion },
 ];
 
 export const BLOCK_COLUMNS: readonly CsvColumn<BlockRow>[] = [
@@ -151,6 +154,7 @@ export const TRIAL_COLUMNS: readonly CsvColumn<TrialRow>[] = [
   { name: "contrast", get: (r) => r.contrast },
   { name: "sep_lambda", get: (r) => r.sepLambda },
   { name: "isi_ms", get: (r) => r.isiMs },
+  { name: "flanker_contrast", get: (r) => r.flankerContrast },
   { name: "target_interval", get: (r) => r.targetInterval },
   { name: "response", get: (r) => r.response },
   { name: "correct", get: (r) => r.correct },
