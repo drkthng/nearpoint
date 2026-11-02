@@ -3,21 +3,21 @@
 Credit deadline: **4 Nov 2026, 23:59 PT = 5 Nov 2026, 08:59 Leipzig time.** Unused credit is lost.
 Check the "Cloud session credits" card at claude.ai/code after the first session to see what one session costs, then pace the rest.
 
-Each session = one cloud session at claude.ai/code on this repo, one branch, one PR.
+Each session = one cloud session at claude.ai/code on this repo, committing directly to `main` (no branches, no PRs).
 Paste the prompt below, replacing `<ID>`.
 
 ```
 You are working on session <ID> of docs/sessions.md in this repo.
 Read CLAUDE.md, docs/protocol.md, docs/sessions.md (section <ID>) and the code you will touch.
-Plan first and list open questions, then implement on a branch named after the session.
+Plan first and list open questions, then implement directly on main.
 Done when the acceptance criteria are met, `npm test` and `npm run typecheck` pass, and
 docs/session-notes/<ID>.md summarises what you built, decisions taken and open issues.
-Open a pull request when done.
+Commit and push to main when done (`git pull --rebase origin main` first).
 ```
 
 ## Waves
 
-| Wave | Sessions | Can run in parallel | Needs merged first |
+| Wave | Sessions | Can run in parallel | Needs on main first |
 |---|---|---|---|
 | 1 | S1, S2, S3, S4 | yes | S0 (skeleton) |
 | 2 | S5, then S6 | no | wave 1 |

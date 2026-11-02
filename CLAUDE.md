@@ -44,7 +44,8 @@ flankers), crowding and backward masking, with adaptive difficulty.
 ## How to work a session
 1. Read this file, `docs/sessions.md` (find your session ID), `docs/protocol.md`, and the code you will touch.
 2. Plan and list open questions before writing code.
-3. Work on a branch named after the session (e.g. `s1-renderer`).
+3. Work directly on `main`: single-user project, no branches, no PRs. Commit in small steps and run
+   `git pull --rebase origin main` before every push, so parallel sessions stack their commits.
 4. Done means: acceptance criteria met, `npm test` and `npm run typecheck` green, and a short summary written to `docs/session-notes/<ID>.md` (do not edit other sessions' notes; parallel sessions must not conflict).
 
 ## Cloud environment

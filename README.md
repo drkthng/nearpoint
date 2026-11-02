@@ -17,7 +17,7 @@ npm run dev        # add -- --host to open it from an iPad on the same network
 3. Use a cloud environment with the default Trusted network access. No setup script is needed:
    `.claude/settings.json` runs `scripts/cloud-setup.sh` at session start to install dependencies.
 4. Follow `docs/sessions.md`: start S1–S4 as four parallel sessions with the prompt given there.
-5. Review and merge each PR; CI runs typecheck, tests and build on every push.
+5. Sessions commit straight to `main`; CI runs typecheck, tests and build on every push.
 
 ## Deploy
 `deploy-pages.yml` (manual) publishes `dist/` to GitHub Pages. Pages from a private repository needs a paid
