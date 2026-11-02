@@ -5,15 +5,37 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <title>nearpoint</title>
     <style>
-      :root { color-scheme: light dark; font-family: system-ui, sans-serif; }
-      body { margin: 0; padding: 2rem 1.25rem; max-width: 40rem; margin-inline: auto; line-height: 1.5; }
-      code { font-size: 0.95em; }
+      :root { color-scheme: light dark; font-family: system-ui, sans-serif; --bg: #fff; --fg: #1a1a1a; --line: #c8c8c8; --card: #f3f3f3; --accent: #2a6fdb; }
+      @media (prefers-color-scheme: dark) { :root { --bg: #121212; --fg: #e8e8e8; --line: #444; --card: #1e1e1e; --accent: #6ea2f5; } }
+      body { margin: 0; padding: 1.5rem 1.25rem; background: var(--bg); color: var(--fg); line-height: 1.5; }
+      main { max-width: 46rem; margin-inline: auto; }
+      body.training { padding: 0; background: #777; }
+      body.training main { max-width: none; margin: 0; }
+      h1 { margin-top: 0; }
+      button { min-height: 44px; min-width: 44px; padding: 0 1rem; font: inherit; border: 1px solid var(--line); border-radius: 8px; background: var(--card); color: var(--fg); cursor: pointer; }
+      button.primary { background: var(--accent); color: #fff; border-color: var(--accent); }
+      button:disabled { opacity: 0.5; cursor: not-allowed; }
+      input[type="number"] { min-height: 44px; font: inherit; width: 6rem; }
+      input[type="range"] { flex: 1; min-height: 44px; }
+      .check { display: flex; align-items: center; min-height: 44px; gap: 0.5rem; }
+      .check input { width: 22px; height: 22px; }
+      .row { display: flex; flex-wrap: wrap; gap: 0.75rem; align-items: center; margin: 1rem 0; }
+      .banner { padding: 0.75rem 1rem; margin: 1rem 0; border: 1px solid #c9a227; border-radius: 8px; background: #fff4cc; color: #3a2e00; }
+      .card { padding: 0.5rem 1rem; margin: 1rem 0; border: 1px solid var(--line); border-radius: 8px; background: var(--card); }
+      .small { font-size: 0.85rem; opacity: 0.8; }
+      .warn { color: #b3261e; }
+      .scroll { overflow-x: auto; }
+      table { border-collapse: collapse; width: 100%; }
+      th, td { padding: 0.4rem 0.6rem; border-bottom: 1px solid var(--line); text-align: left; white-space: nowrap; }
+      .cardbox { border: 2px solid var(--fg); border-radius: 6px; box-sizing: border-box; margin: 0.5rem 0; }
+      .bs-stage { position: relative; height: 60px; margin: 1rem 0; }
+      .bs-cross { position: absolute; left: 0; top: 10px; font-size: 28px; line-height: 1; }
+      .bs-dot { position: absolute; top: 18px; width: 14px; height: 14px; border-radius: 50%; background: var(--fg); }
+      .chart svg { width: 100%; height: auto; }
     </style>
   </head>
   <body>
-    <h1>nearpoint</h1>
-    <p>Skeleton build. The training UI arrives in the sessions listed in <code>docs/sessions.md</code>.</p>
-    <p id="hz">Measuring refresh rate…</p>
+    <main id="app"></main>
     <script type="module" src="/src/main.ts"></script>
   </body>
 </html>

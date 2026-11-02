@@ -1,0 +1,51 @@
+import { thresholdChartSvg, type ChartSeries } from "../../core/chart";
+import type { BlockRow, SessionRow } from "../../data/schema";
+import type { AppContext } from "../context";
+import { clear, h } from "../dom";
+
+export async function renderHistory(ctx: AppContext, root: HTMLElement): Promise<void> {
+  const sessions = (await ctx.db.all<SessionRow>("sessions")).sort((a, b) => a.sessionIndex - b.sessionIndex || a.startedAt.localeCompare(b.startedAt));
+  const blocksBy = new Map<number, BlockRow[]>();
+  for (const s of sessions) blocksBy.set(s.id as number, await ctx.db.sessionBlocks(s.id as number));
+
+  const rows = sessions.map((s) => {
+    const bl = blocksBy.get(s.id as number) ?? [];
+    const valid = bl.reduce((a, b) => a + b.validTrials, 0);
+    const invalid = bl.reduce((a, b) => a + b.invalidTrials, 0);
+    return h("tr", {},
+      h("td", {}, String(s.sessionIndex + 1)),
+      h("td", {}, new Date(s.startedAt).toLocaleString()),
+      h("td", {}, s.status),
+      h("td", {}, String(s.cpd)),
+      h("td", {}, `${s.thetaDeg}°`),
+      h("td", {}, s.change),
+      h("td", {}, `${valid} / ${invalid}`));
+  });
+
+  const byCond = new Map<string, ChartSeries>();
+  for (const s of sessions) {
+    if (s.status !== "completed") continue;
+    for (const b of blocksBy.get(s.id as number) ?? []) {
+      let ser = byCond.get(b.condition);
+      if (!ser) byCond.set(b.condition, (ser = { label: b.condition, points: [] }));
+      ser.points.push({ x: s.sessionIndex, y: b.threshold });
+    }
+  }
+  const chart = h("div", { class: "chart" });
+  // Our own escaped SVG output from thresholdChartSvg.
+  chart.innerHTML = thresholdChartSvg([...byCond.values()], { title: "Contrast threshold by session" });
+
+  clear(root);
+  root.append(
+    h("h1", {}, "History"),
+    sessions.length === 0
+      ? h("p", {}, "No sessions yet.")
+      : h("div", { class: "scroll" }, h("table", {},
+          h("thead", {}, h("tr", {}, ...["#", "Started", "Status", "cpd", "θ", "Change", "Valid / invalid"].map((t) => h("th", {}, t)))),
+          h("tbody", {}, ...rows))),
+    h("h2", {}, "Thresholds"),
+    chart,
+    h("p", { class: "small" }, "Lower is better. cpd changes make thresholds jump."),
+    h("button", { onclick: () => ctx.navigate("start") }, "Back"),
+  );
+}
