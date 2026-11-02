@@ -3,12 +3,26 @@ import { validateCurriculum } from "./protocol";
 
 export const CPD_LADDER: readonly number[] = [2, 3, 4, 6, 8];
 export const ORIENTATION_CYCLE: readonly Orientation[] = [0, 45, 90, 135];
-export const PLATEAU_MARGIN_LOG10 = 0.02;
+export const PLATEAU_MARGIN_LOG10 = 0.01;
 
 export interface SessionParams { cpd: number; thetaDeg: Orientation }
-export interface BlockResult { condition: Condition; threshold: number | null }
+/**
+ * threshold null = staircase did not converge (fewer than 4 reversals); such blocks are ignored
+ * by sessionScore. A session with no converged block neither raises cpd nor counts towards the plateau.
+ */
+export interface BlockResult {
+  condition: Condition;
+  threshold: number | null;
+  blockIndex?: number;
+  validTrials?: number;
+  invalidTrials?: number;
+}
 export interface SessionRecord { params: SessionParams; blocks: BlockResult[] }
 export type ChangeKind = "none" | "orientation" | "cpd" | "orientation+cpd";
+/**
+ * Within a block, each trial draws sep_lambda and isi_ms uniformly at random (seeded) from the
+ * block's lists; one staircase per block.
+ */
 export interface SessionPlan {
   sessionIndex: number;
   params: SessionParams;
@@ -38,6 +52,12 @@ export function nextOrientation(t: Orientation): Orientation {
   return ORIENTATION_CYCLE[(i + 1) % ORIENTATION_CYCLE.length];
 }
 
+/**
+ * Window-mean plateau test. Takes the trailing run of sessions at the last session's cpd, drops
+ * unscored (null) sessions, and compares the mean log10 score of the last k scored sessions with
+ * the mean of the k before them. Plateau when the last k improved on the previous k by less than
+ * marginLog10. Needs at least 2k scored sessions at the current cpd, otherwise false.
+ */
 export function isPlateau(
   history: readonly SessionRecord[],
   plateauSessions: number,
@@ -53,15 +73,19 @@ export function isPlateau(
     if (s !== null) L.push(Math.log10(s));
   }
   const k = plateauSessions;
-  if (L.length < k + 1) return false;
-  const bestBefore = Math.min(...L.slice(0, L.length - k));
-  const recentBest = Math.min(...L.slice(L.length - k));
-  return recentBest > bestBefore - marginLog10;
+  if (L.length < 2 * k) return false;
+  const mean = (xs: number[]) => xs.reduce((a, x) => a + x, 0) / xs.length;
+  const recent = mean(L.slice(L.length - k));
+  const before = mean(L.slice(L.length - 2 * k, L.length - k));
+  return before - recent < marginLog10;
 }
 
 export function nextSession(c: Curriculum, history: readonly SessionRecord[]): NextSession {
   const errs = validateCurriculum(c);
   if (errs.length > 0) throw new Error(`invalid curriculum: ${errs.join("; ")}`);
+  if (c.progression.change_one_param_per_session && c.progression.rotate_orientation_every_n_sessions < 2) {
+    throw new Error("rotate_orientation_every_n_sessions must be >= 2 when change_one_param_per_session is true");
+  }
   const first = c.session_template[0];
   if (!CPD_LADDER.includes(first.cpd)) throw new Error(`cpd ${first.cpd} not in CPD_LADDER`);
   const p = c.progression;
@@ -100,6 +124,12 @@ export function nextSession(c: Curriculum, history: readonly SessionRecord[]): N
     reason = parts.length ? parts.join("; ") : "no change";
   }
 
-  const blocks = c.session_template.map((b) => ({ ...b, cpd: params.cpd, theta_deg: params.thetaDeg }));
+  const blocks = c.session_template.map((b) => ({
+    ...b,
+    ...(b.sep_lambda ? { sep_lambda: [...b.sep_lambda] } : {}),
+    ...(b.isi_ms ? { isi_ms: [...b.isi_ms] } : {}),
+    cpd: params.cpd,
+    theta_deg: params.thetaDeg,
+  }));
   return { stop: false, plan: { sessionIndex: n, params, blocks, change, reason } };
 }

@@ -32,6 +32,8 @@ describe("simulateProgram", () => {
 
   it("produces plausible 25-40 session programs", () => {
     const lengths = withLearning.map((r) => r.plans.length);
+    const finalCpd = withLearning.map((r) => r.plans[r.plans.length - 1].params.cpd);
+    const reasons = withLearning.map((r) => r.stopReason);
     for (const n of lengths) {
       expect(n).toBeGreaterThanOrEqual(25);
       expect(n).toBeLessThanOrEqual(65);
@@ -39,6 +41,7 @@ describe("simulateProgram", () => {
     const med = median(lengths);
     expect(med).toBeGreaterThanOrEqual(25);
     expect(med).toBeLessThanOrEqual(40);
+    expect(lengths.filter((n) => n > 25).length).toBeGreaterThanOrEqual(10);
     const raised = withLearning.filter((r) => r.plans.some((p) => p.params.cpd > r.plans[0].params.cpd));
     expect(raised.length).toBeGreaterThanOrEqual(10);
     for (const r of withLearning) {
@@ -66,10 +69,9 @@ describe("simulateProgram", () => {
     throw new Error("no seed stayed at the initial cpd for 6 sessions");
   });
 
-  it("control: no improvement gives programs no longer than with improvement", () => {
+  it("control: no improvement gives strictly shorter programs than with improvement", () => {
     const flat = runAll({ ...DEFAULT_SIM_MODEL, improvementPerSession: 0 });
-    expect(median(flat.map((r) => r.plans.length))).toBeLessThanOrEqual(
-      median(withLearning.map((r) => r.plans.length)),
-    );
+    const lengths = flat.map((r) => r.plans.length);
+    expect(median(lengths)).toBeLessThan(median(withLearning.map((r) => r.plans.length)));
   });
 });
