@@ -2,6 +2,7 @@ import { pxPerDegree, lambdaPx } from "../core/geometry";
 import { carrierRad, maskPatches, stimulusPatches, type LayoutParams } from "../core/layout";
 import { mulberry32 } from "../core/rng";
 import { renderCpu } from "../render/cpu";
+import { compareWithReference, type CompareStats } from "../render/compare";
 import { WebGLStimulusRenderer, fitCanvasToDevicePixels } from "../render/webgl";
 import { parseDebugParams } from "./debug-params";
 
@@ -36,6 +37,19 @@ try {
 if (gl) rendererLine = "renderer: WebGL2";
 const ctx2d = gl ? null : canvas.getContext("2d");
 
+interface DebugResult {
+  renderer: "webgl2" | "cpu";
+  width: number;
+  height: number;
+  patches: number;
+  lambdaPx: number;
+  stats: CompareStats | null;
+  error?: string;
+}
+function publish(r: DebugResult): void {
+  (window as unknown as { __nearpointDebug?: DebugResult }).__nearpointDebug = r;
+}
+
 const rng = mulberry32(params.seed);
 const nextSeed = (): number => Math.floor(rng() * 4294967296);
 
@@ -69,6 +83,14 @@ function render(w: number, h: number): void {
     };
     if (gl) {
       gl.draw(common);
+      if (params.readback) {
+        // Same task as draw(): the drawing buffer is still valid.
+        const gpu = gl.readPixels();
+        const ref = renderCpu({ width: gpu.width, height: gpu.height, ...common, dither: true });
+        const stats = compareWithReference(gpu.rgba, ref.linear, gpu.width, gpu.height, params.mean);
+        publish({ renderer: "webgl2", width: gpu.width, height: gpu.height, patches: patches.length, lambdaPx: lam, stats });
+        lines.push(`readback: ${stats.ok ? "OK" : "FAIL " + stats.reasons.join("; ")}`);
+      }
     } else if (ctx2d) {
       const r = renderCpu({ width: w, height: h, ...common, dither: true });
       ctx2d.putImageData(new ImageData(new Uint8ClampedArray(r.rgba), w, h), 0, 0);
@@ -80,7 +102,9 @@ function render(w: number, h: number): void {
     );
   } catch (e) {
     lines.push(`error: ${e instanceof Error ? e.message : String(e)}`);
+    if (params.readback) publish({ renderer: gl ? "webgl2" : "cpu", width: w, height: h, patches: 0, lambdaPx: 0, stats: null, error: String(e) });
   }
+  if (params.readback && !gl) publish({ renderer: "cpu", width: w, height: h, patches: 0, lambdaPx: 0, stats: null, error: rendererLine });
   lines.push(
     `devicePixelRatio: ${window.devicePixelRatio}`,
     `canvas backing: ${w}×${h}`,

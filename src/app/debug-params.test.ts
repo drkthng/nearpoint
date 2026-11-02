@@ -12,7 +12,7 @@ describe("parseDebugParams", () => {
 
   it("parses all valid values", () => {
     const r = parseDebugParams(
-      "?condition=CROWD&cpd=6&theta=45&sep=2.5&tc=0.02&fc=0.4&nflank=4&distanceCm=35&pxPerMm=10&mean=0.3&seed=9&frame=mask&present=0",
+      "?condition=CROWD&cpd=6&theta=45&sep=2.5&tc=0.02&fc=0.4&nflank=4&distanceCm=35&pxPerMm=10&mean=0.3&seed=9&frame=mask&present=0&readback=1",
     );
     expect(r.errors).toEqual([]);
     expect(r.params).toEqual({
@@ -29,6 +29,7 @@ describe("parseDebugParams", () => {
       seed: 9,
       frame: "mask",
       targetPresent: false,
+      readback: true,
     });
   });
 

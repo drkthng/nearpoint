@@ -19,7 +19,7 @@ flankers), crowding and backward masking, with adaptive difficulty.
 - Later (out of scope here): native Swift/Metal port.
 
 ## Commands
-- `npm ci` install, `npm test` unit tests, `npm run typecheck`, `npm run build`, `npm run dev`
+- `npm ci` install, `npm test` unit tests, `npm run typecheck`, `npm run build`, `npm run dev`, `npm run e2e` (build + Playwright)
 
 ## Layout
 - `src/core/`   pure logic, no DOM, fully unit-tested: staircase, observer, rng, geometry, luminance, protocol; later curriculum engine and trial state machine

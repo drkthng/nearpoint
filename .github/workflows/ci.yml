@@ -15,6 +15,29 @@ jobs:
       - run: npm run typecheck
       - run: npm test
       - run: npm run build
-  # Session S8 adds an e2e job here: Playwright + headless Chromium, frame-log assertions,
-  # and a GPU-vs-CPU renderer pixel comparison. Kept in CI because the cloud sandbox may not
-  # be allowed to download browser binaries.
+  e2e:
+    # Playwright + headless Chromium (SwiftShader WebGL2): GPU-vs-CPU renderer comparison for every
+    # condition, a scripted training session with timing-log assertions, outcome tests, PWA/offline.
+    needs: test
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - run: npm run build
+      - run: npx playwright test
+        env:
+          CI: "true"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: e2e-screenshots-and-report
+          path: |
+            test-results/
+            playwright-report/
+          retention-days: 14

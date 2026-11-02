@@ -15,6 +15,8 @@ export interface DebugParams {
   seed: number;
   frame: "target" | "mask";
   targetPresent: boolean;
+  /** Test hook: read the GPU frame back and compare it with the CPU reference (window.__nearpointDebug). */
+  readback: boolean;
 }
 
 export const DEBUG_DEFAULTS: DebugParams = {
@@ -31,6 +33,7 @@ export const DEBUG_DEFAULTS: DebugParams = {
   seed: 1,
   frame: "target",
   targetPresent: true,
+  readback: false,
 };
 
 const CONDITIONS: readonly string[] = ["SINGLE", "LM", "CROWD", "BM-T", "BM-LM", "BM-CROWD"];
@@ -70,6 +73,8 @@ export function parseDebugParams(search: string): { params: DebugParams; errors:
   params.targetPresent = get("present", (r) =>
     r === "0" || r === "false" ? false : r === "1" || r === "true" ? true : undefined,
   ) ?? params.targetPresent;
+
+  params.readback = get("readback", (r) => (r === "1" ? true : r === "0" ? false : undefined)) ?? params.readback;
 
   return { params, errors };
 }

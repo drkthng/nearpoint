@@ -131,6 +131,21 @@ export class WebGLStimulusRenderer {
     gl.drawArrays(gl.TRIANGLES, 0, 3);
   }
 
+  /**
+   * Reads the drawing buffer back as RGBA rows top to bottom (testing only). Call in the same task as
+   * draw(): with preserveDrawingBuffer false the buffer is undefined after compositing.
+   */
+  readPixels(): { width: number; height: number; rgba: Uint8Array } {
+    const { gl } = this;
+    const w = gl.drawingBufferWidth;
+    const h = gl.drawingBufferHeight;
+    const raw = new Uint8Array(w * h * 4);
+    gl.readPixels(0, 0, w, h, gl.RGBA, gl.UNSIGNED_BYTE, raw);
+    const rgba = new Uint8Array(raw.length);
+    for (let y = 0; y < h; y++) rgba.set(raw.subarray(4 * w * (h - 1 - y), 4 * w * (h - y)), 4 * w * y);
+    return { width: w, height: h, rgba };
+  }
+
   dispose(): void {
     this.gl.deleteVertexArray(this.vao);
     this.gl.deleteProgram(this.program);
