@@ -16,6 +16,8 @@ export interface OpenOptions {
   name?: string;
   factory?: IDBFactory;
   migrations?: readonly Migration[];
+  /** Called when the open is blocked by another connection (e.g. another tab); the open keeps waiting. */
+  onBlocked?: () => void;
 }
 
 export interface BackupFile {
@@ -60,9 +62,16 @@ export function openDb(o: OpenOptions = {}): Promise<NearpointDb> {
         reject(e);
       }
     };
-    r.onsuccess = () => resolve(new NearpointDb(r.result));
+    r.onsuccess = () => {
+      const db = r.result;
+      // Lets another tab upgrade the schema: this connection closes and becomes unusable,
+      // so the app should reload when that happens.
+      db.onversionchange = () => db.close();
+      resolve(new NearpointDb(db));
+    };
     r.onerror = () => reject(r.error);
-    r.onblocked = () => reject(new Error("database open blocked"));
+    // Do not reject: keep waiting for the other connections to close.
+    r.onblocked = () => o.onBlocked?.();
   });
 }
 
@@ -83,9 +92,9 @@ export class NearpointDb {
 
   async add<T>(store: StoreName, row: T): Promise<number> {
     const tx = this.db.transaction(store, "readwrite");
-    const id = req(tx.objectStore(store).add(row));
-    await done(tx);
-    return (await id) as number;
+    const request = tx.objectStore(store).add(row);
+    const [id] = await Promise.all([req(request), done(tx)]);
+    return id as number;
   }
 
   async put<T>(store: StoreName, row: T & { id: number }): Promise<void> {
@@ -128,12 +137,24 @@ export class NearpointDb {
   }
 
   async completedHistory(): Promise<SessionRecord[]> {
-    const sessions = (await this.all<SessionRow>("sessions"))
+    const tx = this.db.transaction(["sessions", "blocks"], "readonly");
+    const [allSessions, allBlocks] = await Promise.all([
+      req(tx.objectStore("sessions").getAll() as IDBRequest<SessionRow[]>),
+      req(tx.objectStore("blocks").getAll() as IDBRequest<BlockRow[]>),
+    ]);
+    const bySession = new Map<number, BlockRow[]>();
+    for (const b of allBlocks) {
+      const list = bySession.get(b.sessionId);
+      if (list) list.push(b);
+      else bySession.set(b.sessionId, [b]);
+    }
+    const sessions = allSessions
       .filter((s) => s.status === "completed")
       .sort((a, b) => a.sessionIndex - b.sessionIndex);
     const out: SessionRecord[] = [];
     for (const s of sessions) {
-      const blocks: BlockResult[] = (await this.sessionBlocks(s.id as number)).map((b) => ({
+      const rows = (bySession.get(s.id as number) ?? []).sort((a, b) => a.blockIndex - b.blockIndex);
+      const blocks: BlockResult[] = rows.map((b) => ({
         condition: b.condition,
         threshold: b.threshold,
         blockIndex: b.blockIndex,
@@ -170,18 +191,34 @@ export class NearpointDb {
    */
   async restoreBackup(b: BackupFile): Promise<void> {
     if (!b || b.format !== "nearpoint-backup") throw new Error("not a nearpoint backup");
+    if (!Number.isInteger(b.schemaVersion) || b.schemaVersion < 1) {
+      throw new Error(`invalid backup schemaVersion ${b.schemaVersion}`);
+    }
     if (b.schemaVersion > this.version) {
       throw new Error(`backup schema ${b.schemaVersion} is newer than this app (${this.version})`);
     }
     for (const s of STORES) {
       if (!Array.isArray(b[s])) throw new Error(`backup is missing ${s}`);
     }
+    for (const s of STORES) {
+      (b[s] as unknown[]).forEach((row, i) => {
+        const id = (row as { id?: unknown } | null)?.id;
+        const plain = typeof row === "object" && row !== null && !Array.isArray(row);
+        if (!plain || !Number.isInteger(id) || (id as number) < 1) throw new Error(`invalid row in ${s} at index ${i}`);
+      });
+    }
     const tx = this.db.transaction([...STORES], "readwrite");
     const finished = done(tx);
-    for (const s of STORES) {
-      const os = tx.objectStore(s);
-      os.clear();
-      for (const row of b[s]) os.put(row);
+    try {
+      for (const s of STORES) {
+        const os = tx.objectStore(s);
+        os.clear();
+        for (const row of b[s]) os.put(row);
+      }
+    } catch (e) {
+      tx.abort();
+      await finished.catch(() => undefined);
+      throw e;
     }
     await finished;
   }

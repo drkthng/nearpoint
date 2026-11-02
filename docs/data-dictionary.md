@@ -4,6 +4,8 @@ The export produces one CSV file per table. Format: UTF-8 without BOM, RFC 4180 
 endings, one header row. An empty field means null/not recorded. Booleans are `1` (true) and `0` (false).
 List-valued columns are `;`-separated. Times are ISO 8601 UTC strings exactly as stored. Contrast is
 Michelson contrast in linear luminance (0 to 1). Units are given per column.
+Empty string and null are not distinguished in CSV (both export as an empty field); NaN and Infinity
+export as empty; numbers below 1e-6 may appear in exponent form (for example `3e-7`).
 
 The JSON backup (not the CSV) is the restore format; CSV is for analysis only and cannot be imported back.
 
@@ -15,6 +17,13 @@ trials do not update the staircase. `timing_segments` is the intended frame sequ
 gap; interval is 0 (outside the observation intervals), 1 or 2; flags is the concatenation of `T` (target
 shown), `F` (flankers shown), `X` (fixation shown) in that order, empty if none. Example:
 `fixation:0:12:X;blank:0:23:;stim:1:4:TF`.
+
+## Backup and restore
+
+The JSON backup is the restore format. Restore replaces all data atomically: if anything fails, the
+existing data is left unchanged. A backup from a newer schema than the app is refused; backups from
+older schemas are restored as-is (future migrations must transform them). The browser can evict site
+data, so call `requestPersistence()` at first run and export backups regularly.
 
 ## calibrations.csv
 

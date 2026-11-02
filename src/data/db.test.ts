@@ -147,6 +147,36 @@ describe("backup", () => {
     expect(await db.exportBackup(T0)).toEqual(before);
     db.close();
   });
+
+  it("rejects invalid schemaVersion", async () => {
+    const db = await openDb({ factory: new IDBFactory() });
+    const before = await db.exportBackup(T0);
+    for (const v of [0, 1.5]) {
+      await expect(db.restoreBackup({ ...before, schemaVersion: v })).rejects.toThrow(`invalid backup schemaVersion ${v}`);
+    }
+    db.close();
+  });
+
+  it("invalid row is rejected before any write", async () => {
+    const db = await openDb({ factory: new IDBFactory() });
+    await populate(db);
+    const before = await db.exportBackup(T0);
+    await expect(db.restoreBackup({ ...before, trials: [42] as unknown as TrialRow[] })).rejects.toThrow(
+      "invalid row in trials at index 0",
+    );
+    expect(await db.exportBackup(T0)).toEqual(before);
+    db.close();
+  });
+
+  it("a row that cannot be cloned aborts the restore and leaves data unchanged", async () => {
+    const db = await openDb({ factory: new IDBFactory() });
+    await populate(db);
+    const before = await db.exportBackup(T0);
+    const bad = { ...before.calibrations[0], id: 99, boom: () => 1 } as unknown as Calibration;
+    await expect(db.restoreBackup({ ...before, calibrations: [bad] })).rejects.toBeTruthy();
+    expect(await db.exportBackup(T0)).toEqual(before);
+    db.close();
+  });
 });
 
 describe("migrations", () => {
@@ -175,5 +205,17 @@ describe("migrations", () => {
     db2.close();
 
     await expect(openDb({ name: "m", factory, migrations: [MIGRATIONS[0]] })).rejects.toBeTruthy();
+  });
+
+  it("an open connection closes itself on versionchange so an upgrade is not blocked", async () => {
+    const factory = new IDBFactory();
+    const a = await openDb({ name: "vc", factory, migrations: [MIGRATIONS[0]] });
+    const v2 = (db: IDBDatabase) => {
+      db.createObjectStore("notes", { keyPath: "id", autoIncrement: true });
+    };
+    const b = await openDb({ name: "vc", factory, migrations: [MIGRATIONS[0], v2] });
+    expect(b.version).toBe(2);
+    b.close();
+    void a;
   });
 });

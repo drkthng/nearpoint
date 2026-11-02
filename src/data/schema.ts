@@ -33,6 +33,10 @@ export interface SessionRow {
   thetaDeg: Orientation;
   change: ChangeKind;
   reason: string;
+  abortReason?: string;
+  /** Seed of the session's mulberry32 stream, so plans/trials can be replayed. */
+  rngSeed?: number;
+  appVersion?: string;
 }
 
 export interface BlockRow {
@@ -63,10 +67,12 @@ export interface TrialRow {
   contrast: number;
   sepLambda: number | null;
   isiMs: number | null;
+  flankerContrast?: number | null;
   targetInterval: 1 | 2;
   response: 1 | 2 | null;
   correct: boolean | null;
   rtMs: number | null;
+  /** Must equal timing.analysis.valid (denormalised for indexing/CSV). */
   valid: boolean;
   timing: StoredTiming;
 }
