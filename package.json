@@ -1,9 +1,9 @@
 {
-  "name": "near-vision-trainer",
+  "name": "nearpoint",
   "private": true,
   "version": "0.1.0",
   "type": "module",
-  "description": "Personal research instrument: perceptual-learning trainer for near vision (Gabor lateral masking, crowding, backward masking).",
+  "description": "Perceptual-learning trainer for near vision. Adaptive Gabor contrast detection with collinear flankers, crowding and backward masking, reimplementing the published Polat/GlassesOff protocol. Frame-exact WebGL2, dithered sub-1 % contrast, simulated-observer tests. Personal research tool, not a medical device.",
   "scripts": {
     "dev": "vite",
     "build": "tsc --noEmit && vite build",

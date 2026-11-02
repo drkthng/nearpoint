@@ -1,4 +1,4 @@
-# Near-vision trainer
+# nearpoint
 
 Personal research instrument that reimplements the published Polat / GlassesOff perceptual-learning
 protocol for presbyopia: contrast detection of brief Gabor targets under lateral masking (collinear

@@ -5,5 +5,5 @@ set -euo pipefail
 cd "${CLAUDE_PROJECT_DIR:-$(dirname "$0")/..}"
 if [ "${CLAUDE_CODE_REMOTE:-}" = "true" ] || [ ! -d node_modules ]; then
   npm ci --no-audit --no-fund >/dev/null 2>&1 || npm install --no-audit --no-fund >/dev/null 2>&1
-  echo "near-vision-trainer: dependencies installed"
+  echo "nearpoint: dependencies installed"
 fi

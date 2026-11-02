@@ -1,8 +1,8 @@
-# Near-vision trainer
+# nearpoint
 
-A personal research instrument that reimplements the published perceptual-learning protocol behind
-GlassesOff / Oryx (Gabor contrast detection with collinear flankers, crowding and backward masking).
-Not a medical device. Background: `docs/research/oryx-near-vision-report.html`.
+Perceptual-learning trainer for near vision. Adaptive Gabor contrast detection with collinear flankers, crowding and backward masking, reimplementing the published Polat/GlassesOff protocol. Frame-exact WebGL2, dithered sub-1 % contrast, simulated-observer tests. Personal research tool, not a medical device.
+
+Background: `docs/research/oryx-near-vision-report.html`.
 
 ## Local
 ```
