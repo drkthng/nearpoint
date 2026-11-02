@@ -49,8 +49,14 @@ Blur disc (for reasoning, not used at runtime): `β [rad] ≈ pupil [m] × defoc
 | Plateau rule | no threshold improvement over 4 sessions | Placeholder |
 | Schedule | daily, ≤ 12 min | Between Oryx (10 min daily) and GlassesOff (12 min, ≥ 3/week) |
 | Flanker contrast | 60 % | 2016 protocol |
+| Crowding layout | 3×3 grid, offsets i·dλ·b + j·dλ·c (i, j ∈ {−1, 0, 1}, centre excluded); n ∈ {2, 4, 6, 8}, filled in order: collinear pair, pair along the carrier, diagonals | Literature gives counts (4–11) but not positions; a grid aligned with the bars keeps the collinear pair identical to LM |
+| Backward-masking layouts | BM-T: target alone, mask = collinear flanker pair; BM-LM: LM, mask = same pair; BM-CROWD: CROWD, mask = same crowd array | Published: "flankers (or crowd array) re-presented after ISI"; for BM-T the mask flankers are our assumption |
+| Target absent (2IFC blank interval) | Target patch omitted; flankers unchanged | Only the target differs between intervals |
+| Patch support | Each patch evaluated within 3.5σ of its centre (CPU and GPU identical) | Envelope < 0.22 % beyond; bounds CPU cost |
+| Mean luminance | 0.214 linear (sRGB code ≈ 127.5, mid-grey) | Maximises symmetric contrast headroom on an sRGB fallback |
+| Dither hash (GPU) | Integer PCG hash of (pixel x, pixel y, 32-bit per-frame seed) | sin-based hashes lose precision at iPad pixel coordinates; CPU uses mulberry32 (same distribution, different stream) |
 
 ## Open questions
 - Exact SF-step criterion and plateau rule used commercially.
-- Crowding layouts (positions of 4–11 flankers) are not fully specified; ours: 3×3 grid around the target, aligned with the bars.
+- Crowding layouts: 4–11 flankers in the literature; > 8 layouts undefined. Ours supports 2, 4, 6, 8 on a 3×3 grid aligned with the bars (see Our choices).
 - Whether 120 Hz panels should be locked to 60 Hz for comparability with published durations.
