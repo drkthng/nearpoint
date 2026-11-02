@@ -64,6 +64,11 @@ Blur disc (for reasoning, not used at runtime): `β [rad] ≈ pupil [m] × defoc
 | Target interval | 50/50 per trial from the seeded RNG | Standard 2IFC |
 | Late-frame rule | Every frame of the trial (fixation to end of interval 2) is checked; interval > 1.5× nominal ⇒ invalid; N frames are logged with N+1 rAF timestamps | CLAUDE.md non-negotiable 2 |
 | Training device | Samsung Galaxy S24, Chrome PWA, landscape, fixed 60 Hz ("Standard" motion smoothness), "Natural" screen mode, max brightness | The 2016 study ran on iPhone/iPod; a phone at 40 cm matches it; 60 Hz keeps published durations at 2/4/7 frames |
+| Block length | A block ends after its planned number of timing-valid trials, or after 1.5× that many attempts | Invalid-timing trials do not update the staircase (non-negotiable 2) but must not make a block endless |
+| Per-trial draws | sep_lambda, then isi_ms (masked only), then target interval and jitter, all from the session's seeded RNG | Sessions can be replayed from the stored seed |
+| Relative index | (1 − threshold / median of your past thresholds for the same condition and cpd) × 100 %; positive = better | Oryx shows a per-block difficulty card; its formula is not public |
+| Card calibration | px/mm from matching an ID-1 card (85.60 × 53.98 mm) on screen | ISO/IEC 7810 ID-1 size; no ruler needed |
+| Blind-spot distance check | Optional; distance = offset / tan(15°) | Blind spot ≈ 15° temporal to fixation (textbook value); rough check only |
 
 ## Open questions
 - Exact SF-step criterion and plateau rule used commercially.
