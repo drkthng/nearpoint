@@ -16,7 +16,8 @@ npm run dev        # add -- --host to open it from an iPad on the same network
 2. At claude.ai/code, connect GitHub and install the Claude GitHub App with access to this repository.
 3. Use a cloud environment with the default Trusted network access. No setup script is needed:
    `.claude/settings.json` runs `scripts/cloud-setup.sh` at session start to install dependencies.
-4. Follow `docs/sessions.md`: start S1–S4 as four parallel sessions with the prompt given there.
+4. Start sessions with the one-line prompt in `docs/roadmap.md`; each session claims the next eligible
+   step there, so several can run in parallel. Scope per session is in `docs/sessions.md`.
 5. Sessions commit straight to `main`; CI runs typecheck, tests and build on every push.
 
 ## Deploy

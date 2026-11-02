@@ -4,10 +4,12 @@ Credit deadline: **4 Nov 2026, 23:59 PT = 5 Nov 2026, 08:59 Leipzig time.** Unus
 Check the "Cloud session credits" card at claude.ai/code after the first session to see what one session costs, then pace the rest.
 
 Each session = one cloud session at claude.ai/code on this repo, committing directly to `main` (no branches, no PRs).
-Paste the prompt below, replacing `<ID>`.
+Status, claiming and hand-offs live in `docs/roadmap.md`; start sessions with the one-line prompt there.
+This file defines the scope and acceptance criteria of each session. Older prompt, still valid if you
+want to name a session explicitly (replace `<ID>`):
 
 ```
-You are working on session <ID> of docs/sessions.md in this repo.
+You are working on session <ID> of docs/sessions.md in this repo. Read docs/roadmap.md first.
 Read CLAUDE.md, docs/protocol.md, docs/sessions.md (section <ID>) and the code you will touch.
 Plan first and list open questions, then implement directly on main.
 Done when the acceptance criteria are met, `npm test` and `npm run typecheck` pass, and

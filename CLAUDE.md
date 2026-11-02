@@ -7,7 +7,8 @@ flankers), crowding and backward masking, with adaptive difficulty.
 - Background and evidence: `docs/research/oryx-near-vision-report.html`
 - Protocol parameters (published values + our choices): `docs/protocol.md`
 - Training program as data: `docs/curriculum.json`
-- Work plan for cloud sessions: `docs/sessions.md`
+- Status, next step and hand-offs: `docs/roadmap.md` (read first)
+- Work plan for cloud sessions (scope and acceptance per session): `docs/sessions.md`
 
 ## Stack and target
 - TypeScript (strict), Vite, Vitest. WebGL2 for stimuli; plain DOM for menus. No UI framework unless a session justifies it.
@@ -42,7 +43,9 @@ flankers), crowding and backward masking, with adaptive difficulty.
 - If a parameter is not in `docs/protocol.md`, do not present an invented value as published: add it under "Our choices" with a rationale.
 
 ## How to work a session
-1. Read this file, `docs/sessions.md` (find your session ID), `docs/protocol.md`, and the code you will touch.
+0. Read `docs/roadmap.md` first: it says where the project is, which session to claim, and the hand-offs
+   from earlier sessions. Claim your session there before starting and update it when done.
+1. Read this file, `docs/sessions.md` (your session's section), `docs/protocol.md`, and the code you will touch.
 2. Plan and list open questions before writing code.
 3. Work directly on `main`: single-user project, no branches, no PRs. Commit in small steps and run
    `git pull --rebase origin main` before every push, so parallel sessions stack their commits.
