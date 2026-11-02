@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   buildTrial,
+  DEFAULT_TRIAL_TIMING,
   expandFrames,
   hasFlankers,
   isMasked,
@@ -117,6 +118,20 @@ describe("jitter", () => {
   it("max jitter frames", () => {
     expect(maxJitterFrames(250, 60)).toBe(15);
     expect(maxJitterFrames(250, 120)).toBe(30);
+    expect(maxJitterFrames(250, 30)).toBe(7);
+    expect(maxJitterFrames(250, 90)).toBe(22);
+    expect(maxJitterFrames(250, 144)).toBe(36);
+  });
+  it("never exceeds jitterMaxMs at 30 and 90 Hz", () => {
+    for (const [hz, max] of [[30, 7], [90, 22]]) {
+      const r = mulberry32(11);
+      for (let i = 0; i < 2000; i++) {
+        const p = buildTrial({ condition: "LM", hz, durMs: 68 }, r);
+        expect(p.jitterFrames).toBeGreaterThanOrEqual(0);
+        expect(p.jitterFrames).toBeLessThanOrEqual(max);
+        expect((p.jitterFrames * 1000) / hz).toBeLessThanOrEqual(250);
+      }
+    }
   });
   it("bounded and covers the range", () => {
     for (const [hz, max] of [[60, 15], [120, 30]]) {
@@ -187,5 +202,21 @@ describe("errors", () => {
       "isiMs > 0 required for BM-LM (got 0)",
     );
     expect(() => buildTrial({ condition: "LM", hz: 60, durMs: 68 }, r)).not.toThrow();
+  });
+  it("validates timing before drawing any random numbers", () => {
+    let calls = 0;
+    const counted = () => (calls++, 0.5);
+    const spec = { condition: "LM" as const, hz: 60, durMs: 68 };
+    expect(() =>
+      buildTrial(spec, counted, { ...DEFAULT_TRIAL_TIMING, fixationMs: NaN }),
+    ).toThrow("timing.fixationMs invalid (got NaN)");
+    expect(() =>
+      buildTrial(spec, counted, { ...DEFAULT_TRIAL_TIMING, jitterMaxMs: -1 }),
+    ).toThrow("timing.jitterMaxMs invalid (got -1)");
+    expect(() =>
+      buildTrial(spec, counted, { ...DEFAULT_TRIAL_TIMING, gapMs: 0 }),
+    ).toThrow("timing.gapMs invalid (got 0)");
+    expect(calls).toBe(0);
+    expect(() => buildTrial(spec, counted, { ...DEFAULT_TRIAL_TIMING, jitterMaxMs: 0 })).not.toThrow();
   });
 });

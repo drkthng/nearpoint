@@ -63,7 +63,7 @@ export function hasFlankers(c: Condition): boolean {
 }
 
 export function maxJitterFrames(jitterMaxMs: number, hz: number): number {
-  return Math.round((jitterMaxMs * hz) / 1000);
+  return Math.floor((jitterMaxMs * hz) / 1000 + 1e-9);
 }
 
 /**
@@ -79,6 +79,13 @@ export function buildTrial(
   const { condition, hz, durMs, isiMs } = spec;
   if (!Number.isFinite(hz) || hz <= 0) throw new Error(`hz must be > 0 (got ${hz})`);
   if (!Number.isFinite(durMs) || durMs <= 0) throw new Error(`durMs must be > 0 (got ${durMs})`);
+  for (const f of ["fixationMs", "preBlankMs", "gapMs"] as const) {
+    const v = timing[f];
+    if (!Number.isFinite(v) || v <= 0) throw new Error(`timing.${f} invalid (got ${v})`);
+  }
+  if (!Number.isFinite(timing.jitterMaxMs) || timing.jitterMaxMs < 0) {
+    throw new Error(`timing.jitterMaxMs invalid (got ${timing.jitterMaxMs})`);
+  }
   const masked = isMasked(condition);
   if (masked && (isiMs === undefined || !Number.isFinite(isiMs) || isiMs <= 0)) {
     throw new Error(`isiMs > 0 required for ${condition} (got ${isiMs})`);

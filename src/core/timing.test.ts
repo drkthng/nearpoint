@@ -71,4 +71,33 @@ describe("analyzeTiming", () => {
     expect(a.maxIntervalMs).toBe(0);
     expect(() => analyzeTiming([0, 16], 0)).toThrow("hz must be > 0 (got 0)");
   });
+
+  it("treats exactly 1.5x nominal as on time, just above as late", () => {
+    const at = flat(10, 20);
+    at[4] = 30;
+    const a = analyzeTiming(fromIntervals(at), 50);
+    expect(a.thresholdMs).toBe(30);
+    expect(a.valid).toBe(true);
+    expect(a.lateFrames).toEqual([]);
+    at[4] = 30.01;
+    const b = analyzeTiming(fromIntervals(at), 50);
+    expect(b.valid).toBe(false);
+    expect(b.lateFrames).toEqual([4]);
+  });
+
+  it("a NaN timestamp makes the analysis invalid", () => {
+    const ts = fromIntervals(flat(10, 1000 / 60));
+    ts[5] = NaN;
+    const a = analyzeTiming(ts, 60);
+    expect(a.valid).toBe(false);
+    expect(a.nonIncreasing).toEqual([4, 5]);
+  });
+
+  it("reports a late final interval as the last frame", () => {
+    const iv = flat(10, 1000 / 60);
+    iv[9] = 40;
+    const a = analyzeTiming(fromIntervals(iv), 60, 10);
+    expect(a.valid).toBe(false);
+    expect(a.lateFrames).toEqual([9]);
+  });
 });

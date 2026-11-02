@@ -52,4 +52,28 @@ describe("framePatches", () => {
     expect(non.length).toBeGreaterThan(0);
     for (const f of non) expect(framePatches(f, { ...base, condition: "SINGLE" })).toEqual([]);
   });
+
+  it("flanker and target presence match the frame flags for every condition", () => {
+    const conds = ["SINGLE", "LM", "CROWD", "BM-T", "BM-LM", "BM-CROWD"] as const;
+    for (const condition of conds) {
+      const masked = condition.startsWith("BM");
+      const spec = { condition, hz: 60, durMs: 68, ...(masked ? { isiMs: 83 } : {}) };
+      const fr = expandFrames(buildTrial(spec, mulberry32(3)));
+      const lp = { ...base, condition, nFlankers: 8 };
+      for (const f of fr) {
+        const p = framePatches(f, lp);
+        const hasFlanker = p.some((q) => !(q.x === base.cx && q.y === base.cy));
+        const hasTarget = p.some((q) => q.x === base.cx && q.y === base.cy);
+        expect(hasFlanker, `${condition} ${f.phase} flankers`).toBe(f.showFlankers);
+        expect(hasTarget, `${condition} ${f.phase} target`).toBe(f.showTarget);
+      }
+    }
+  });
+
+  it("BM-T mask frames give exactly 2 patches", () => {
+    const fr = expandFrames(buildTrial({ condition: "BM-T", hz: 60, durMs: 68, isiMs: 83 }, mulberry32(3)));
+    const masks = fr.filter((f) => f.phase === "mask");
+    expect(masks.length).toBeGreaterThan(0);
+    for (const f of masks) expect(framePatches(f, { ...base, condition: "BM-T" })).toHaveLength(2);
+  });
 });
