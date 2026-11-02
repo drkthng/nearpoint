@@ -1,5 +1,6 @@
 import { thresholdChartSvg, type ChartSeries } from "../../core/chart";
-import type { BlockRow, SessionRow } from "../../data/schema";
+import type { BlockRow, OutcomeTestRow, SessionRow } from "../../data/schema";
+import { OUTCOME_KIND_LABEL, isTestRun, outcomeHeadline } from "./outcome-menu";
 import type { AppContext } from "../context";
 import { clear, h } from "../dom";
 
@@ -40,6 +41,8 @@ export async function renderHistory(ctx: AppContext, root: HTMLElement): Promise
   // Our own escaped SVG output from thresholdChartSvg.
   chart.innerHTML = thresholdChartSvg([...byCond.values()], { title: "Contrast threshold by session", xLabelOffset: 1 });
 
+  const outcomes = (await ctx.db.all<OutcomeTestRow>("outcomeTests")).filter((r) => !isTestRun(r)).sort((a, b) => a.createdAt.localeCompare(b.createdAt));
+
   clear(root);
   root.append(
     h("h1", {}, "History"),
@@ -57,6 +60,15 @@ export async function renderHistory(ctx: AppContext, root: HTMLElement): Promise
             h("tbody", {}, ...abortedRows))))]
       : []),
     h("p", { class: "small" }, "Lower is better. cpd changes make thresholds jump."),
+    h("h2", {}, "Outcome tests"),
+    outcomes.length === 0
+      ? h("p", {}, "No outcome tests yet.")
+      : h("div", { class: "scroll" }, h("table", {},
+          h("thead", {}, h("tr", {}, ...["Date", "Test", "Result"].map((t) => h("th", {}, t)))),
+          h("tbody", {}, ...outcomes.map((r) => h("tr", {},
+            h("td", {}, new Date(r.createdAt).toLocaleString()),
+            h("td", {}, OUTCOME_KIND_LABEL[r.kind] ?? r.kind),
+            h("td", {}, outcomeHeadline(r))))))),
     h("button", { onclick: () => ctx.navigate("start") }, "Back"),
   );
 }

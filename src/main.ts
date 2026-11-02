@@ -5,6 +5,10 @@ import { parseRoute, routeQuery, type Route } from "./app/routes";
 import { renderCalibrate } from "./app/screens/calibrate";
 import { renderData } from "./app/screens/data";
 import { renderHistory } from "./app/screens/history";
+import { renderAcuity } from "./app/screens/outcome-acuity";
+import { renderContrast } from "./app/screens/outcome-contrast";
+import { renderOutcomeMenu } from "./app/screens/outcome-menu";
+import { renderReading } from "./app/screens/outcome-reading";
 import { renderStart } from "./app/screens/start";
 import { leaveTraining, renderTrain } from "./app/screens/train";
 import { validateCurriculum, type Curriculum } from "./core/protocol";
@@ -75,6 +79,10 @@ async function boot(): Promise<void> {
         case "history": await renderHistory(ctx, root); break;
         case "data": await renderData(ctx, root); break;
         case "train": await renderTrain(ctx, root, routeQuery(location.hash)); break;
+        case "tests": await renderOutcomeMenu(ctx, root); break;
+        case "acuity": await renderAcuity(ctx, root, routeQuery(location.hash)); break;
+        case "reading": await renderReading(ctx, root, routeQuery(location.hash)); break;
+        case "contrast": await renderContrast(ctx, root, routeQuery(location.hash)); break;
       }
     } catch (e) {
       clear(root);

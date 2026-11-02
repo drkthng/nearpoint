@@ -10,6 +10,10 @@ describe("routes", () => {
     expect(parseRoute("#/history")).toBe("history");
     expect(parseRoute("#train?quick=1")).toBe("train");
     expect(parseRoute("#/data?x=1&y=2")).toBe("data");
+    expect(parseRoute("#tests")).toBe("tests");
+    expect(parseRoute("#acuity?crowding=uncrowded&timing=timed")).toBe("acuity");
+    expect(parseRoute("#reading")).toBe("reading");
+    expect(parseRoute("#contrast?quick=1")).toBe("contrast");
   });
   it("parses the query", () => {
     expect(routeQuery("#train?quick=1").get("quick")).toBe("1");

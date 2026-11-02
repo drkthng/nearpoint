@@ -119,3 +119,12 @@ data, so call `requestPersistence()` at first run and export backups regularly.
 | `calibration_id` | integer | | Foreign key to calibrations.id; empty if none. |
 | `summary` | JSON | | Object of summary values (numbers, strings or null). |
 | `details` | JSON | | Test-specific details; empty if none. |
+
+Kinds and their `summary` keys (S6). Rows whose summary has `testRun` come from automatic test modes and are
+hidden in History.
+
+| `kind` | `summary` keys | `details` |
+| --- | --- | --- |
+| `acuity-crowded-unlimited`, `acuity-uncrowded-unlimited`, `acuity-crowded-timed`, `acuity-uncrowded-timed` | `logMAR` (per-letter score), `lettersCorrect`, `topTested`, `atFloor`/`atCeiling` (1/0), `crowding`, `presentation`, `durationMs` (timed only), `distanceCm`, `hz` (timed only), `invalidPresentations` | `lines` (logMAR, letters, responses, correct), `presented` (per line: letters shown, stored timing log for timed presentations, valid), `available`, `seed`, `pxPerMm` |
+| `reading` | `readingAcuity` (logMAR), `maxReadingSpeedWpm`, `criticalPrintSize` (logMAR), `sentences`, `smallestSize`, `distanceCm` | `trials` (logMAR, sentence, ms, errors, unreadable, wpm), `font`, `xHeightRatio`, `sizes`, `seed`, `pxPerMm` |
+| `contrast` | `threshold2/4/6` (Michelson contrast), `logCS2/4/6`, `invalid2/4/6`, `hz`, `durationMs`, `distanceCm` | `results` per cpd, `trials` per cpd (contrast, targetInterval, response, correct, valid, rtMs, stored timing log), `seed`, `thetaDeg`, `pxPerMm` |

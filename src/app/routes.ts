@@ -1,5 +1,5 @@
-export type Route = "start" | "calibrate" | "train" | "history" | "data";
-const ROUTES: readonly Route[] = ["start", "calibrate", "train", "history", "data"];
+export type Route = "start" | "calibrate" | "train" | "history" | "data" | "tests" | "acuity" | "reading" | "contrast";
+const ROUTES: readonly Route[] = ["start", "calibrate", "train", "history", "data", "tests", "acuity", "reading", "contrast"];
 
 function split(hash: string): [string, string] {
   const h = hash.replace(/^#\/?/, "");

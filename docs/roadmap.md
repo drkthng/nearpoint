@@ -37,7 +37,7 @@ Read CLAUDE.md and docs/roadmap.md, claim the next eligible session as described
 | S3 | Curriculum engine | 1 | S0 | done | `docs/session-notes/S3.md` |
 | S4 | Data layer | 1 | S0 | done | `docs/session-notes/S4.md` |
 | S5 | App shell, calibration, training flow | 2 | S1, S2, S3, S4 | done | `docs/session-notes/S5.md` |
-| S6 | Outcome tests | 2 | S5 | in progress (2026-11-02) | |
+| S6 | Outcome tests | 2 | S5 | done | `docs/session-notes/S6.md` |
 | S7 | PWA and deployment | 3 | S5 | in progress (2026-11-02) | |
 | S8 | End-to-end tests in CI | 3 | S5 | in progress (2026-11-02) | |
 | S9 | Audit | 4 | S1–S8 | blocked | |
@@ -100,6 +100,14 @@ Facts a later session needs that are not obvious from the code. Append under you
   boxes, "Measure refresh rate", "Save calibration"); wait for "Session complete"; read IndexedDB "nearpoint".
   Headless WebGL2 needs `--use-angle=swiftshader --enable-unsafe-swiftshader`; SwiftShader yields some
   timing-invalid trials, so assert they are counted and excluded, not that there are none.
+
+### From S6
+- **S8**: outcome-test hooks `#acuity?crowding=crowded&timing=unlimited&auto=1`, `#reading?auto=1`,
+  `#contrast?quick=1&auto=1&trials=4`; wait for the "Result" heading; rows land in `outcomeTests`
+  with `summary.testRun`.
+- **S9**: check `src/core/outcome/separation.test.ts` still covers all outcome modules.
+- **Operator**: print chart A/B from Outcome tests at 100 % and check the 100 mm bar; run the baseline
+  outcome tests before training session 1.
 
 ## Backlog
 

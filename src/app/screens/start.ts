@@ -50,6 +50,7 @@ export async function renderStart(ctx: AppContext, root: HTMLElement): Promise<v
       { class: "row" },
       h("button", { class: "primary", disabled: !canTrain, onclick: () => ctx.navigate("train") }, "Start training"),
       h("button", { onclick: () => ctx.navigate("calibrate") }, "Calibrate"),
+      h("button", { onclick: () => ctx.navigate("tests") }, "Outcome tests"),
       h("button", { onclick: () => ctx.navigate("history") }, "History"),
       h("button", { onclick: () => ctx.navigate("data") }, "Data"),
     ),
