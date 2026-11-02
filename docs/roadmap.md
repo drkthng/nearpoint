@@ -33,7 +33,7 @@ Read CLAUDE.md and docs/roadmap.md, claim the next eligible session as described
 |---|---|---|---|---|---|
 | S0 | Skeleton | 0 | – | done | `docs/session-notes/S0.md` |
 | S1 | Renderer (WebGL2 + CPU reference), layout, rename | 1 | S0 | done | `docs/session-notes/S1.md` |
-| S2 | Trial engine and frame scheduler | 1 | S0 | in progress (2026-11-02) | |
+| S2 | Trial engine and frame scheduler | 1 | S0 | done | `docs/session-notes/S2.md` |
 | S3 | Curriculum engine | 1 | S0 | next | |
 | S4 | Data layer | 1 | S0 | next | |
 | S5 | App shell, calibration, training flow | 2 | S1, S2, S3, S4 | blocked | |
@@ -59,13 +59,27 @@ Facts a later session needs that are not obvious from the code. Append under you
   shader compile errors, compare read-back pixels with `renderCpu()` statistically (CPU dither = mulberry32,
   GPU dither = PCG, different streams). A `uDither` uniform (u = 0.5) would allow an exact comparison.
 
+### From S2
+- **S5**: per trial `buildTrial(spec, rng)` → `expandFrames` → `playFrames({frames, hz, drawFrame, drawEnd,
+  signal})`. `drawFrame` = `framePatches(frame, layoutParams)` + `WebGLStimulusRenderer.draw` with a new
+  seed, plus the fixation mark when `frame.showFixation`. `drawEnd` draws the response screen (required: it
+  terminates the last stimulus frame). Abort with an `AbortController` on `visibilitychange`; after an abort
+  or error, clear the screen yourself. Update the staircase only when `log.analysis.valid`; show the count of
+  invalid trials.
+- **S4**: persist one `TrialTimingLog` (src/core/timing.ts) per trial: hz, intended `FrameSpec[]`, N+1
+  timestamps, analysis. Intended frames can be stored compactly as the plan's `segments`.
+- **S8**: play one real trial in Playwright and assert N+1 timestamps and `analysis.valid` at 60 Hz.
+
 ## Backlog
 
 Open issues not owned by a scheduled session. Add `(from S<n>)`; remove when resolved, saying where.
 
 - Shader compiles and renders in desktop Chrome on Windows (operator check, 2 Nov 2026: WebGL2, backing
   1921×901 at DPR 1.104, CROWD stimulus centred). Still unchecked: iPad Safari (operator) and CI (S8). (from S1)
-- Desktop refresh measured ≈ 30 Hz on the operator's machine (power saving or throttling?). Check on the
-  iPad before relying on frame timing (S2/S5). (from S1)
+- Desktop refresh measured ≈ 30 Hz on the operator's machine (power saving or throttling?). At 30 Hz
+  durations get coarse (34 ms → 1 frame); train at a fixed 60 Hz. (from S1, S2)
+- Target device: operator may train on a Galaxy S24 (Android Chrome) instead of an iPad. Pending decision;
+  if adopted, update CLAUDE.md "Stack and target" (60 Hz fixed "Standard" motion smoothness, "Natural"
+  screen mode). (from S2)
 - Crowding layouts with more than 8 flankers are undefined. (from S1)
 - `fitCanvasToDevicePixels()` and the WebGL draw path have no unit tests (browser only; S8). (from S1)
