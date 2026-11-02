@@ -35,8 +35,8 @@ Read CLAUDE.md and docs/roadmap.md, claim the next eligible session as described
 | S1 | Renderer (WebGL2 + CPU reference), layout, rename | 1 | S0 | done | `docs/session-notes/S1.md` |
 | S2 | Trial engine and frame scheduler | 1 | S0 | done | `docs/session-notes/S2.md` |
 | S3 | Curriculum engine | 1 | S0 | done | `docs/session-notes/S3.md` |
-| S4 | Data layer | 1 | S0 | in progress (2026-11-02) | |
-| S5 | App shell, calibration, training flow | 2 | S1, S2, S3, S4 | blocked | |
+| S4 | Data layer | 1 | S0 | done | `docs/session-notes/S4.md` |
+| S5 | App shell, calibration, training flow | 2 | S1, S2, S3, S4 | next | |
 | S6 | Outcome tests | 2 | S5 | blocked | |
 | S7 | PWA and deployment | 3 | S5 | blocked | |
 | S8 | End-to-end tests in CI | 3 | S5 | blocked | |
@@ -77,6 +77,16 @@ Facts a later session needs that are not obvious from the code. Append under you
   `{condition, threshold, blockIndex, validTrials, invalidTrials}`; `threshold` is `Staircase.threshold()`
   (null if not converged). Only timing-valid trials update the staircase.
 - **S4**: persist `SessionPlan` and `SessionRecord` per session; `history` = completed sessions in order.
+
+### From S4
+- **S5**: `openDb({ onBlocked })` once at start (ask the user to close other tabs on `onBlocked`; reload after
+  a `versionchange` closes the connection). Call `requestPersistence()` (src/data/persist.ts) on first run and
+  show the result. Write rows as the session runs: calibration → session (`status: "in-progress"`, `rngSeed`,
+  `appVersion`) → blocks → trials (`timing: toStoredTiming(log)`, `valid === log.analysis.valid`) → session
+  completed/aborted (`abortReason`). `completedHistory()` feeds `nextSession`. Offer CSV export
+  (`exportCsv`) and JSON backup (`exportBackup`) as downloads, plus a backup reminder. When filling the new
+  optional fields, add them to `src/data/csv.ts` columns and `docs/data-dictionary.md` (the sync test enforces it).
+- **S6**: outcome tests go into the `outcomeTests` store (`kind`, `summary`, `details`).
 
 ## Backlog
 
