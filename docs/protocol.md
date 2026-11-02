@@ -54,13 +54,14 @@ Blur disc (for reasoning, not used at runtime): `β [rad] ≈ pupil [m] × defoc
 | Target absent (2IFC blank interval) | Target patch omitted; flankers unchanged | Only the target differs between intervals |
 | Patch support | Each patch evaluated within 3.5σ of its centre (CPU and GPU identical) | Envelope < 0.22 % beyond; bounds CPU cost |
 | Mean luminance | 0.214 linear (sRGB code ≈ 127.5, mid-grey) | Maximises symmetric contrast headroom on an sRGB fallback |
-| Dither hash (GPU) | Integer PCG hash of (pixel x, pixel y, 32-bit per-frame seed) | sin-based hashes lose precision at iPad pixel coordinates; CPU uses mulberry32 (same distribution, different stream) |
+| Dither hash (GPU) | Integer PCG hash of (pixel x, pixel y, 32-bit per-frame seed) | sin-based hashes lose precision at large pixel coordinates; CPU uses mulberry32 (same distribution, different stream) |
 | Trial sequence | Fixation 200 ms → blank 300 ms + jitter → interval 1 → gap 500 ms → interval 2 → response; every segment in whole frames (`framesFor`). The 500 ms gap runs from the end of interval 1 (after the mask, if any) to the start of interval 2. | Published elements (2012); one pre-blank with jitter before interval 1 rather than before each interval keeps the 500 ms inter-interval gap fixed |
 | Temporal jitter | Uniform 0–250 ms in whole frames (max = floor(250·hz/1000) frames, never above 250 ms), added to the pre-interval blank | "Temporal jitter" is published without a range |
 | Fixation mark | Shown only during the 200 ms fixation segment | Published sequence; revisit if fixation is unstable |
 | ISI | Blank frames between target offset and mask onset (not onset-to-onset) | Published values do not say which; offset-to-onset is the common definition |
 | Target interval | 50/50 per trial from the seeded RNG | Standard 2IFC |
 | Late-frame rule | Every frame of the trial (fixation to end of interval 2) is checked; interval > 1.5× nominal ⇒ invalid; N frames are logged with N+1 rAF timestamps | CLAUDE.md non-negotiable 2 |
+| Training device | Samsung Galaxy S24, Chrome PWA, landscape, fixed 60 Hz ("Standard" motion smoothness), "Natural" screen mode, max brightness | The 2016 study ran on iPhone/iPod; a phone at 40 cm matches it; 60 Hz keeps published durations at 2/4/7 frames |
 
 ## Open questions
 - Exact SF-step criterion and plateau rule used commercially.

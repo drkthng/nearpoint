@@ -12,7 +12,10 @@ flankers), crowding and backward masking, with adaptive difficulty.
 
 ## Stack and target
 - TypeScript (strict), Vite, Vitest. WebGL2 for stimuli; plain DOM for menus. No UI framework unless a session justifies it.
-- Target: iPad in Safari (installed as PWA), landscape, 40 cm viewing distance, full brightness, dim room.
+- Target: Samsung Galaxy S24 in Chrome (installed as PWA), landscape, 40 cm viewing distance, dim room.
+  Device settings: Motion smoothness "Standard" (fixed 60 Hz), Screen mode "Natural" (≈ sRGB), adaptive
+  brightness and Eye comfort shield off, brightness at maximum. Geometry always comes from calibration (pxPerMm).
+- Secondary: desktop Chrome for development and debugging (needs a real ≥ 60 Hz refresh).
 - Later (out of scope here): native Swift/Metal port.
 
 ## Commands

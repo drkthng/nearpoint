@@ -6,7 +6,7 @@ describe("parseDebugParams", () => {
     const r = parseDebugParams("");
     expect(r.params).toEqual(DEBUG_DEFAULTS);
     expect(r.errors).toEqual([]);
-    expect(DEBUG_DEFAULTS.pxPerMm).toBeCloseTo(12.8205, 4);
+    expect(DEBUG_DEFAULTS.pxPerMm).toBeCloseTo(16.378, 3); // S24, 416 ppi
     expect(DEBUG_DEFAULTS.mean).toBe(0.214);
   });
 

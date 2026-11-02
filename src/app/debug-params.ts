@@ -26,7 +26,7 @@ export const DEBUG_DEFAULTS: DebugParams = {
   flankerContrast: 0.6,
   nFlankers: 8,
   distanceCm: 40,
-  pxPerMm: 1 / 0.078,
+  pxPerMm: 416 / 25.4, // Galaxy S24: 416 ppi (0.061 mm pitch); calibrate for real use
   mean: DEFAULT_MEAN_LUMINANCE,
   seed: 1,
   frame: "target",

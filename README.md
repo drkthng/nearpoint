@@ -8,7 +8,7 @@ Background: `docs/research/oryx-near-vision-report.html`.
 ```
 npm ci
 npm test
-npm run dev        # add -- --host to open it from an iPad on the same network
+npm run dev        # add -- --host to open it from the phone (S24) on the same network
 ```
 
 ## Claude Code cloud sessions

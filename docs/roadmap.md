@@ -75,11 +75,11 @@ Facts a later session needs that are not obvious from the code. Append under you
 Open issues not owned by a scheduled session. Add `(from S<n>)`; remove when resolved, saying where.
 
 - Shader compiles and renders in desktop Chrome on Windows (operator check, 2 Nov 2026: WebGL2, backing
-  1921×901 at DPR 1.104, CROWD stimulus centred). Still unchecked: iPad Safari (operator) and CI (S8). (from S1)
+  1921×901 at DPR 1.104, CROWD stimulus centred). Still unchecked: Galaxy S24 Chrome (operator) and CI (S8). (from S1)
 - Desktop refresh measured ≈ 30 Hz on the operator's machine (power saving or throttling?). At 30 Hz
   durations get coarse (34 ms → 1 frame); train at a fixed 60 Hz. (from S1, S2)
-- Target device: operator may train on a Galaxy S24 (Android Chrome) instead of an iPad. Pending decision;
-  if adopted, update CLAUDE.md "Stack and target" (60 Hz fixed "Standard" motion smoothness, "Natural"
-  screen mode). (from S2)
+- Target device switched to Galaxy S24 (Chrome) on 2 Nov 2026 (CLAUDE.md, protocol.md "Training device").
+  S5 calibration must not assume a pixel pitch; S7 writes Android install notes; S8 should emulate a
+  phone viewport in landscape. (from S2)
 - Crowding layouts with more than 8 flankers are undefined. (from S1)
 - `fitCanvasToDevicePixels()` and the WebGL draw path have no unit tests (browser only; S8). (from S1)

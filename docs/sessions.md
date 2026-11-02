@@ -82,7 +82,7 @@ Acceptance: scoring functions unit-tested (logMAR per letter scoring, reading sp
 
 ## S7 — PWA and deployment
 Web app manifest, service worker (offline), Screen Wake Lock during sessions, fullscreen, landscape hint,
-iPad home-screen install notes in README. Verify `deploy-pages.yml` (or document an alternative static host).
+Android (Galaxy S24, Chrome) home-screen install notes in README. Verify `deploy-pages.yml` (or document an alternative static host).
 Acceptance: Lighthouse PWA checks pass in CI or are documented; app works offline after first load.
 
 ## S8 — End-to-end tests in CI
