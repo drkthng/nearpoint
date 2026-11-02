@@ -38,9 +38,9 @@ Read CLAUDE.md and docs/roadmap.md, claim the next eligible session as described
 | S4 | Data layer | 1 | S0 | done | `docs/session-notes/S4.md` |
 | S5 | App shell, calibration, training flow | 2 | S1, S2, S3, S4 | done | `docs/session-notes/S5.md` |
 | S6 | Outcome tests | 2 | S5 | done | `docs/session-notes/S6.md` |
-| S7 | PWA and deployment | 3 | S5 | in progress (2026-11-02) | |
-| S8 | End-to-end tests in CI | 3 | S5 | in progress (2026-11-02) | |
-| S9 | Audit | 4 | S1–S8 | blocked | |
+| S7 | PWA and deployment | 3 | S5 | done | `docs/session-notes/S7.md` |
+| S8 | End-to-end tests in CI | 3 | S5 | done | `docs/session-notes/S8.md` |
+| S9 | Audit | 4 | S1–S8 | next | |
 
 Statuses: `blocked` (needs not done), `next` (claimable), `in progress (<date>)`, `done`.
 
@@ -109,16 +109,28 @@ Facts a later session needs that are not obvious from the code. Append under you
 - **Operator**: print chart A/B from Outcome tests at 100 % and check the 100 mm bar; run the baseline
   outcome tests before training session 1.
 
+### From S7
+- **Operator**: installing needs HTTPS. Deploy `dist/` (GitHub Pages workflow on a paid plan, or
+  Cloudflare Pages/Netlify), open it in Chrome on the S24, Add to home screen, then calibrate inside the
+  installed app (README "Install on the phone").
+- **S9**: the service worker is generated from `src/pwa/sw-source.ts`; check it stays same-origin only.
+
+### From S8
+- **S9**: `npm run e2e` runs the browser suite locally (cloud sessions have Chromium pre-installed;
+  `@playwright/test` is pinned to its version). Screenshots per case are in the CI artefact
+  `e2e-screenshots-and-report`.
+
 ## Backlog
 
 Open issues not owned by a scheduled session. Add `(from S<n>)`; remove when resolved, saying where.
 
 - Shader compiles and renders in desktop Chrome on Windows (operator check, 2 Nov 2026: WebGL2, backing
-  1921×901 at DPR 1.104, CROWD stimulus centred). Still unchecked: Galaxy S24 Chrome (operator) and CI (S8). (from S1)
+  1921×901 at DPR 1.104, CROWD stimulus centred) and in CI under SwiftShader, matching the CPU reference
+  (S8). Still unchecked: Galaxy S24 Chrome (operator). (from S1)
 - Desktop refresh measured ≈ 30 Hz on the operator's machine (power saving or throttling?). At 30 Hz
   durations get coarse (34 ms → 1 frame); train at a fixed 60 Hz. (from S1, S2)
 - Target device switched to Galaxy S24 (Chrome) on 2 Nov 2026 (CLAUDE.md, protocol.md "Training device").
   S5 calibration must not assume a pixel pitch; S7 writes Android install notes; S8 should emulate a
   phone viewport in landscape. (from S2)
 - Crowding layouts with more than 8 flankers are undefined. (from S1)
-- `fitCanvasToDevicePixels()` and the WebGL draw path have no unit tests (browser only; S8). (from S1)
+- `fitCanvasToDevicePixels()` has no direct test; the WebGL draw path is covered by `e2e/render.spec.ts` (S8). (from S1)
