@@ -45,8 +45,9 @@ Blur disc (for reasoning, not used at runtime): `β [rad] ≈ pupil [m] × defoc
 | Staircase | 2-down/1-up, 0.1 log10 step, threshold = geometric mean of last 8 reversals (min 4) | Simple, validated against simulated observer in `src/core/core.test.ts` |
 | Contrast floor | 0.3 % | Dithering makes sub-1 % steps meaningful on average; verify with photometer |
 | σ | σ = λ | ≈ 2 visible cycles |
-| Spatial-frequency step criterion | threshold < 5 % | Placeholder |
-| Plateau rule | no threshold improvement over 4 sessions | Placeholder |
+| Spatial-frequency step criterion | Raise cpd one step on the ladder 2 → 3 → 4 → 6 → 8 when the geometric mean of the previous session's block thresholds is < 5 %; only in sessions without an orientation change | Published: raised after a contrast criterion; criterion value and ladder are placeholders |
+| Plateau rule | Stop (after ≥ 25 sessions) when none of the last 4 scored sessions at the current cpd improves on the earlier best at that cpd by ≥ 0.02 log10; always stop at 65 | Published: stop at plateau, minimum 25; definition is ours. Restricting to the current cpd avoids a false plateau after a cpd raise |
+| Orientation rotation | Every 2 sessions (sessions 2, 4, 6, … rotate 0 → 45 → 90 → 135 → 0); rotation has priority over a cpd raise in the same session | Published: orientation every 2 sessions, one parameter change per session |
 | Schedule | daily, ≤ 12 min | Between Oryx (10 min daily) and GlassesOff (12 min, ≥ 3/week) |
 | Flanker contrast | 60 % | 2016 protocol |
 | Crowding layout | 3×3 grid, offsets i·dλ·b + j·dλ·c (i, j ∈ {−1, 0, 1}, centre excluded); n ∈ {2, 4, 6, 8}, filled in order: collinear pair, pair along the carrier, diagonals | Literature gives counts (4–11) but not positions; a grid aligned with the bars keeps the collinear pair identical to LM |
