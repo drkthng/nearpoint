@@ -34,7 +34,7 @@ Read CLAUDE.md and docs/roadmap.md, claim the next eligible session as described
 | S0 | Skeleton | 0 | – | done | `docs/session-notes/S0.md` |
 | S1 | Renderer (WebGL2 + CPU reference), layout, rename | 1 | S0 | done | `docs/session-notes/S1.md` |
 | S2 | Trial engine and frame scheduler | 1 | S0 | done | `docs/session-notes/S2.md` |
-| S3 | Curriculum engine | 1 | S0 | in progress (2026-11-02) | |
+| S3 | Curriculum engine | 1 | S0 | done | `docs/session-notes/S3.md` |
 | S4 | Data layer | 1 | S0 | next | |
 | S5 | App shell, calibration, training flow | 2 | S1, S2, S3, S4 | blocked | |
 | S6 | Outcome tests | 2 | S5 | blocked | |
@@ -69,6 +69,14 @@ Facts a later session needs that are not obvious from the code. Append under you
 - **S4**: persist one `TrialTimingLog` (src/core/timing.ts) per trial: hz, intended `FrameSpec[]`, N+1
   timestamps, analysis. Intended frames can be stored compactly as the plan's `segments`.
 - **S8**: play one real trial in Playwright and assert N+1 timestamps and `analysis.valid` at 60 Hz.
+
+### From S3
+- **S5**: at session start call `nextSession(curriculum, history)` (src/core/curriculum.ts); on `stop` show
+  "program complete". Show `plan.reason`. One `Staircase` per block (settings from `curriculum.staircase`);
+  each trial draws sep_lambda / isi_ms uniformly from the block's lists with the seeded RNG. Record per block
+  `{condition, threshold, blockIndex, validTrials, invalidTrials}`; `threshold` is `Staircase.threshold()`
+  (null if not converged). Only timing-valid trials update the staircase.
+- **S4**: persist `SessionPlan` and `SessionRecord` per session; `history` = completed sessions in order.
 
 ## Backlog
 
