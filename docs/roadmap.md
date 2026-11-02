@@ -36,10 +36,10 @@ Read CLAUDE.md and docs/roadmap.md, claim the next eligible session as described
 | S2 | Trial engine and frame scheduler | 1 | S0 | done | `docs/session-notes/S2.md` |
 | S3 | Curriculum engine | 1 | S0 | done | `docs/session-notes/S3.md` |
 | S4 | Data layer | 1 | S0 | done | `docs/session-notes/S4.md` |
-| S5 | App shell, calibration, training flow | 2 | S1, S2, S3, S4 | in progress (2026-11-02) | |
-| S6 | Outcome tests | 2 | S5 | blocked | |
-| S7 | PWA and deployment | 3 | S5 | blocked | |
-| S8 | End-to-end tests in CI | 3 | S5 | blocked | |
+| S5 | App shell, calibration, training flow | 2 | S1, S2, S3, S4 | done | `docs/session-notes/S5.md` |
+| S6 | Outcome tests | 2 | S5 | next | |
+| S7 | PWA and deployment | 3 | S5 | next | |
+| S8 | End-to-end tests in CI | 3 | S5 | next | |
 | S9 | Audit | 4 | S1–S8 | blocked | |
 
 Statuses: `blocked` (needs not done), `next` (claimable), `in progress (<date>)`, `done`.
@@ -87,6 +87,19 @@ Facts a later session needs that are not obvious from the code. Append under you
   (`exportCsv`) and JSON backup (`exportBackup`) as downloads, plus a backup reminder. When filling the new
   optional fields, add them to `src/data/csv.ts` columns and `docs/data-dictionary.md` (the sync test enforces it).
 - **S6**: outcome tests go into the `outcomeTests` store (`kind`, `summary`, `details`).
+
+### From S5
+- **Operator**: first real run on the Galaxy S24: `npm run dev -- --host`, open the shown network URL in
+  Chrome, calibrate (card + 40 cm stand + checklist), run one session. Check the invalid-timing count shown
+  on each block card; it should be near 0 at a fixed 60 Hz.
+- **S6**: separate module and screen (non-negotiable 6); add a route in `src/app/routes.ts` and a start-screen
+  button; reuse `src/app/dom.ts` and the latest calibration; store in `outcomeTests`.
+- **S7**: the app already requests fullscreen, landscape lock and a wake lock on Start (all optional, in
+  try/catch); keep them working inside the installed PWA.
+- **S8**: use the test hook `#train?quick=1&auto=1&trials=4` after calibrating via the UI (tick all checklist
+  boxes, "Measure refresh rate", "Save calibration"); wait for "Session complete"; read IndexedDB "nearpoint".
+  Headless WebGL2 needs `--use-angle=swiftshader --enable-unsafe-swiftshader`; SwiftShader yields some
+  timing-invalid trials, so assert they are counted and excluded, not that there are none.
 
 ## Backlog
 
