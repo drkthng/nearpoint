@@ -37,9 +37,9 @@ Read CLAUDE.md and docs/roadmap.md, claim the next eligible session as described
 | S3 | Curriculum engine | 1 | S0 | done | `docs/session-notes/S3.md` |
 | S4 | Data layer | 1 | S0 | done | `docs/session-notes/S4.md` |
 | S5 | App shell, calibration, training flow | 2 | S1, S2, S3, S4 | done | `docs/session-notes/S5.md` |
-| S6 | Outcome tests | 2 | S5 | next | |
-| S7 | PWA and deployment | 3 | S5 | next | |
-| S8 | End-to-end tests in CI | 3 | S5 | next | |
+| S6 | Outcome tests | 2 | S5 | in progress (2026-11-02) | |
+| S7 | PWA and deployment | 3 | S5 | in progress (2026-11-02) | |
+| S8 | End-to-end tests in CI | 3 | S5 | in progress (2026-11-02) | |
 | S9 | Audit | 4 | S1–S8 | blocked | |
 
 Statuses: `blocked` (needs not done), `next` (claimable), `in progress (<date>)`, `done`.
