@@ -1,0 +1,950 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Reading through the blur: Oryx near-vision training, its science, and a build plan</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..800&family=Literata:ital,opsz,wght@0,7..72,400..700;1,7..72,400..500&display=swap" rel="stylesheet">
+<style>
+:root{
+  color-scheme: light;
+  --paper:#F3F4F2; --ink:#1A1D21; --ink2:#4B525A; --rule:#CBD0D3; --panel:#E7E9E6;
+  --red:#AE2A20; --green:#2C6A3C; --redbg:#F5E2DF; --greenbg:#DFEDE3;
+  --stim:#808080; --codebg:#E2E5E1;
+  --sans:"Archivo","Helvetica Neue",Arial,sans-serif;
+  --serif:"Literata",Georgia,"Times New Roman",serif;
+  --mono:ui-monospace,"SFMono-Regular",Menlo,Consolas,monospace;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    color-scheme: dark;
+    --paper:#15171A; --ink:#E6E8E9; --ink2:#A7AEB5; --rule:#353A40; --panel:#1F2226;
+    --red:#EE897F; --green:#82C79C; --redbg:#38201E; --greenbg:#1B3123; --codebg:#1C1F23;
+  }
+}
+:root[data-theme="dark"]{
+  color-scheme: dark;
+  --paper:#15171A; --ink:#E6E8E9; --ink2:#A7AEB5; --rule:#353A40; --panel:#1F2226;
+  --red:#EE897F; --green:#82C79C; --redbg:#38201E; --greenbg:#1B3123; --codebg:#1C1F23;
+}
+*,*::before,*::after{box-sizing:inherit}
+html{scroll-padding-top:env(safe-area-inset-top,0px);-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--serif);font-size:1.0625rem;line-height:1.65;font-optical-sizing:auto}
+main{padding:0 1.25rem 4rem}
+.col{max-width:41rem;margin:0 auto}
+.wide{max-width:56rem;margin:0 auto}
+h2,h3,h4{font-family:var(--sans);font-stretch:112%;line-height:1.2;color:var(--ink)}
+h2{font-size:1.75rem;font-weight:700;margin:3.5rem 0 1rem;padding-top:1.25rem;border-top:2px solid var(--ink)}
+h3{font-size:1.2rem;font-weight:650;margin:2.25rem 0 .6rem}
+h4{font-size:1rem;font-weight:650;margin:1.5rem 0 .4rem}
+p{margin:0 0 1rem}
+a{color:inherit;text-decoration-color:var(--rule);text-underline-offset:.18em;text-decoration-thickness:1.5px}
+a:hover{text-decoration-color:var(--green)}
+a:focus-visible,button:focus-visible,select:focus-visible,input:focus-visible{outline:3px solid var(--green);outline-offset:2px}
+strong{font-weight:650}
+small,.small{font-size:.875rem;color:var(--ink2)}
+ul,ol{padding-left:1.25rem;margin:0 0 1rem}
+li{margin:.3rem 0}
+code{font-family:var(--mono);font-size:.86em;background:var(--codebg);padding:.08em .3em;border-radius:3px}
+pre{font-family:var(--mono);font-size:.8rem;line-height:1.5;background:var(--codebg);padding:1rem 1.1rem;border-radius:6px;overflow-x:auto;margin:0 0 1.25rem;border-left:3px solid var(--rule)}
+pre code{background:none;padding:0;font-size:inherit}
+
+/* hero: an eye-chart title, each line 0.2 logMAR smaller */
+.hero{padding:3.5rem 1.25rem 2rem;border-bottom:1px solid var(--rule)}
+.chart-title{max-width:56rem;margin:0 auto;font-family:var(--sans);font-weight:700;color:var(--ink)}
+.chart-title h1{margin:0;font:inherit}
+.line{display:flex;align-items:baseline;justify-content:space-between;gap:1rem;font-stretch:125%;letter-spacing:.06em;line-height:1.08}
+.line span.lm{font-family:var(--serif);font-style:italic;font-weight:400;font-size:.8rem;letter-spacing:0;color:var(--ink2);font-stretch:100%;white-space:nowrap}
+.l1{font-size:clamp(2.7rem,10.5vw,4.6rem)}
+.l2{font-size:clamp(1.75rem,6.6vw,2.9rem);margin-top:.35rem}
+.l3{font-size:clamp(1.15rem,4.2vw,1.83rem);margin-top:.5rem;font-weight:650}
+.l4{font-size:clamp(1rem,2.65vw,1.155rem);margin-top:.55rem;font-weight:600}
+.chart-note{max-width:56rem;margin:1.1rem auto 0;font-size:.875rem;color:var(--ink2)}
+.deck{max-width:41rem;margin:2.25rem auto 0;font-size:1.22rem;line-height:1.55}
+.meta{max-width:41rem;margin:.9rem auto 0;font-size:.9rem;color:var(--ink2)}
+
+.note{background:var(--panel);border-radius:6px;padding:1rem 1.15rem;margin:1.5rem 0;font-size:.97rem}
+.note p:last-child{margin-bottom:0}
+
+nav.toc{max-width:41rem;margin:2rem auto 0}
+nav.toc ul{list-style:none;padding:0;display:flex;flex-wrap:wrap;gap:.4rem .5rem;margin:0}
+nav.toc li{margin:0}
+nav.toc a{display:inline-block;font-family:var(--sans);font-size:.9rem;padding:.3rem .65rem;border:1px solid var(--rule);border-radius:999px;text-decoration:none}
+nav.toc a:hover{border-color:var(--ink)}
+
+/* duochrome markers: green = holds up, red = caveat */
+.ok,.caveat{position:relative;padding-left:1.35rem}
+.ok::before,.caveat::before{content:"";position:absolute;left:0;top:.5em;width:.7rem;height:.7rem;border-radius:2px}
+.ok::before{background:var(--green)}
+.caveat::before{background:var(--red)}
+ul.marks{list-style:none;padding-left:0}
+.legend{display:flex;gap:1.25rem;flex-wrap:wrap;font-size:.875rem;color:var(--ink2);margin:.5rem 0 1rem}
+
+.table-wrap{overflow-x:auto;margin:0 0 1.5rem;-webkit-overflow-scrolling:touch}
+table{border-collapse:collapse;width:100%;font-size:.92rem;line-height:1.45;min-width:34rem}
+th,td{text-align:left;vertical-align:top;padding:.55rem .7rem;border-bottom:1px solid var(--rule)}
+th{font-family:var(--sans);font-weight:650;font-size:.85rem;border-bottom:2px solid var(--ink)}
+td.num,th.num{text-align:right;font-variant-numeric:tabular-nums}
+tr.sub td{color:var(--ink2)}
+
+figure{margin:1.75rem 0}
+figcaption{font-size:.875rem;color:var(--ink2);margin-top:.6rem;line-height:1.5}
+svg.chart{width:100%;height:auto;display:block;font-family:var(--sans)}
+svg.chart .grid{stroke:var(--rule);stroke-width:1}
+svg.chart .axis{stroke:var(--ink2);stroke-width:1.2}
+svg.chart .mark{stroke:var(--ink2);stroke-width:1;stroke-dasharray:3 4}
+svg.chart .tick{fill:var(--ink2);font-size:12px}
+svg.chart .axlab{fill:var(--ink2);font-size:12.5px}
+svg.chart path{fill:none;stroke-width:2.4}
+svg.chart .c05{stroke:var(--green)}
+svg.chart .c10{stroke:var(--ink)}
+svg.chart .c15{stroke:var(--red)}
+svg.chart .lab{font-size:13px;font-weight:600}
+svg.chart .c05t{fill:var(--green)} svg.chart .c10t{fill:var(--ink)} svg.chart .c15t{fill:var(--red)}
+
+.timeline{display:grid;grid-template-columns:repeat(auto-fit,minmax(6.2rem,1fr));gap:.35rem;margin:1rem 0 .5rem;font-family:var(--sans);font-size:.8rem}
+.timeline div{border:1px solid var(--rule);border-radius:4px;padding:.45rem .5rem;background:var(--panel)}
+.timeline div b{display:block;font-weight:650;font-size:.82rem}
+.timeline .stim{background:var(--stim);color:#fff;border-color:var(--stim)}
+.timeline .resp{background:var(--greenbg);border-color:var(--green)}
+
+/* demo */
+.demo{background:var(--panel);border-radius:8px;padding:1rem;margin:1.5rem 0}
+.demo canvas{display:block;width:100%;max-width:560px;height:280px;margin:0 auto;background:var(--stim);border-radius:4px;image-rendering:pixelated}
+.controls{display:grid;grid-template-columns:repeat(auto-fit,minmax(13rem,1fr));gap:.6rem 1rem;margin:1rem 0 .75rem;font-family:var(--sans);font-size:.88rem}
+.controls label{display:flex;flex-direction:column;gap:.25rem}
+.controls label.inline{flex-direction:row;align-items:center;gap:.5rem}
+.controls output{font-variant-numeric:tabular-nums;color:var(--ink2)}
+select,input[type=range]{font:inherit;accent-color:var(--green)}
+select{padding:.3rem .4rem;border:1px solid var(--rule);border-radius:4px;background:var(--paper);color:var(--ink)}
+.trialbar{display:flex;flex-wrap:wrap;gap:.5rem;margin:.5rem 0}
+button{font-family:var(--sans);font-size:.92rem;font-weight:600;padding:.55rem .95rem;border-radius:5px;border:1.5px solid var(--ink);background:var(--paper);color:var(--ink);cursor:pointer;min-height:44px}
+button.primary{background:var(--ink);color:var(--paper)}
+button:disabled{opacity:.4;cursor:default}
+#status{font-family:var(--sans);font-size:.88rem;margin:.5rem 0 0;color:var(--ink2);min-height:2.6em}
+#status .good{color:var(--green);font-weight:650}
+#status .bad{color:var(--red);font-weight:650}
+
+.phase{border-left:3px solid var(--ink);padding:.1rem 0 .1rem 1rem;margin:1.5rem 0}
+.phase h4{margin-top:0}
+footer{max-width:41rem;margin:3rem auto 0;font-size:.85rem;color:var(--ink2);border-top:1px solid var(--rule);padding-top:1rem}
+ol.refs{font-size:.9rem;padding-left:1.4rem}
+ol.refs li{margin:.45rem 0}
+@media (max-width:520px){
+  body{font-size:1rem}
+  h2{font-size:1.45rem}
+  .line span.lm{font-size:.7rem}
+}
+@media (prefers-reduced-motion: reduce){*{scroll-behavior:auto!important}}
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="chart-title" role="banner">
+    <h1>
+      <span class="line l1">Reading <span class="lm">1.0 logMAR</span></span>
+      <span class="line l2">through the blur <span class="lm">0.8</span></span>
+      <span class="line l3">how Oryx trains near vision <span class="lm">0.6</span></span>
+      <span class="line l4">and how you could build one <span class="lm">0.4</span></span>
+    </h1>
+  </div>
+  <p class="chart-note">Each title line is 0.2 logMAR smaller than the one above, as on a near-acuity chart (on very narrow screens the bottom lines stop shrinking so they stay legible). The average near-acuity gain reported after this kind of training is about 0.18 logMAR, roughly one of these steps.</p>
+  <p class="deck">A research report on the Oryx near-vision trainer behind the Tim Ferriss offer: what the software does, the optics and neuroscience it rests on, how strong the evidence is, and a concrete plan for building a comparable trainer with Claude Code.</p>
+  <p class="meta">Prepared 22 October 2026. Sources are linked in the text and listed at the end.</p>
+  <nav class="toc" aria-label="Sections">
+    <ul>
+      <li><a href="#summary" data-jump>Summary</a></li>
+      <li><a href="#product" data-jump>The product</a></li>
+      <li><a href="#lineage" data-jump>Lineage</a></li>
+      <li><a href="#physics" data-jump>Physics</a></li>
+      <li><a href="#biology" data-jump>Biology</a></li>
+      <li><a href="#protocol" data-jump>Protocol</a></li>
+      <li><a href="#demo" data-jump>Live demo</a></li>
+      <li><a href="#evidence" data-jump>Evidence</a></li>
+      <li><a href="#build" data-jump>Build plan</a></li>
+      <li><a href="#legal" data-jump>IP and regulation</a></li>
+      <li><a href="#sources" data-jump>Sources</a></li>
+    </ul>
+  </nav>
+</header>
+
+<main>
+<div class="col">
+
+<div class="note">
+<p><strong>About the name.</strong> The link points to Oryx Neuro’s purchase page for Tim Ferriss listeners. That page blocks automated access, so I could not read it directly. Everywhere else (the company site, its App Store listing, the podcast) the product is called <strong>Oryx</strong>, tagline “See close. Go far.” I found no separate product named “Proximity”; if that is the name of the Ferriss offer or a program tier, everything below still applies, because the underlying method is the same.</p>
+</div>
+
+<h2 id="summary">Summary</h2>
+
+<p><strong>What it is.</strong> Oryx is a tablet and phone app from Sharp Vision Inc. (New York) that trains the visual cortex to cope better with the blur of presbyopia, the age-related loss of focusing range. It is delivered through eye-care professionals and, for the Ferriss audience, as a pilot of 100 places at $999 (usual price $1,300). The program is 30 to 40 daily sessions of up to about 10 minutes, done without reading glasses. Ferriss used it 8 minutes a day for 30 days, went from struggling to read at arm’s length to reading small menu print in dim light, and invested in the company afterwards.</p>
+
+<p><strong>Where it comes from.</strong> Oryx is the third commercial generation of a method developed by vision scientist Uri Polat (Tel Aviv, later Bar-Ilan University): first Ucansi, then GlassesOff (2013, roughly one million users), now Oryx. Oryx’s own evidence pages cite Polat’s papers. The core task has not changed in 20 years: detect a faint, briefly flashed Gabor patch that sits between high-contrast “flanker” patches, sometimes inside a crowd of patches and sometimes chased by a mask a few frames later. Difficulty adapts continuously.</p>
+
+<p><strong>How it works.</strong> Nothing in the eye changes. In the key study, accommodation, pupil size and depth of focus were identical before and after training. What improves is neural: higher sensitivity to low contrast (the blurred image is a low-contrast image), faster early visual processing, and less crowding between neighbouring letters. Reported gains are near acuity improving by a factor of about 1.5 to 1.6 in minimum angle of resolution (≈0.18 logMAR, about two chart lines) and reading speed at the smallest readable print rising by roughly 17 to 25 words per minute.</p>
+
+<p><strong>How much to believe.</strong> The direction of the effect is consistent and related effects appear in independent labs. But nearly all presbyopia data come from the inventor’s group or company employees, control groups were small and not randomised, and I found no sham-controlled randomised trial in presbyopia. Oryx’s headline figures (94 % improved, 2.5–3 lines, durable for 15 years) rest partly on unpublished company data from 19 people. Treat it as a plausible, moderate effect that depends on adherence and has an optical ceiling, not as a replacement for reading glasses in everyone.</p>
+
+<p><strong>Can you build it?</strong> Yes. The training protocol is published in enough detail to reimplement. The algorithm is the easy part. The hard parts are display physics (contrast steps finer than 1 %, frame-exact timing, a known viewing distance) and honest validation of whether it works on you. Patents and medical-device law only start to matter if you sell it or make health claims.</p>
+
+<h2 id="product">The product, as far as it is public</h2>
+
+<div class="table-wrap">
+<table>
+<thead><tr><th>Aspect</th><th>What the sources say</th></tr></thead>
+<tbody>
+<tr><td>Company</td><td>Sharp Vision Inc. operates oryxneuro.com and the Oryx apps (per the site’s terms of use). Not the Paris RegTech firm with the same name. A New York–based serial entrepreneur, Yaniv Nissim, lists Oryx Neuro as his company; data aggregators list it as founded in 2026.</td></tr>
+<tr><td>Launch</td><td>Introduced to optometrists at the American Academy of Optometry meeting (“Academy 2026”, Anaheim). Ferriss discussed it in episode #887 (20 October 2026) as an early pilot, not an established medical treatment.</td></tr>
+<tr><td>Distribution</td><td>Through participating eye-care professionals (App Store listing; optometrist page pitches it as “eye care before eye wear”).</td></tr>
+<tr><td>Price</td><td>Ferriss pilot: 100 spots at $999, normally $1,300.</td></tr>
+<tr><td>Dose</td><td>30–40 daily sessions, up to 10 minutes each; tablet recommended (they suggest a model if yours is unsuitable); maintenance training afterwards.</td></tr>
+<tr><td>Who it suits</td><td>Best if your reading add is +1.50 D or less. Above that, improvement is possible but full independence from readers within 30–40 sessions is less likely. Less suitable if you wear readers more than 5–6 hours a day. Train without reading glasses or multifocals.</td></tr>
+<tr><td>App features</td><td>App Store version history: a calibration step that builds a personalised program (v1.0.2), a fix to the timing of trial frames (v1.0.3), and a per-block results card with a performance score and a difficulty score relative to past sessions (v1.0.4).</td></tr>
+<tr><td>Mechanism claim</td><td>Website: the brain “captures more visual samples per second”. In the literature this corresponds to faster processing under backward masking (see Biology).</td></tr>
+<tr><td>Outcome claims</td><td>94 % improved near vision; average 2.5–3 ETDRS lines; gains maintained for 15 years with light ongoing training. Cited sources: Polat’s 2016 review in <em>Current Ophthalmology Reports</em> and unpublished company data on 19 people aged 50–73 followed for 10–15 years.</td></tr>
+</tbody>
+</table>
+</div>
+
+<p>The App Store changelog is the most useful technical clue. A “calibration” stage plus per-block performance and difficulty scores means the app estimates a starting threshold, then runs blocks with adaptive difficulty, exactly like the published GlassesOff procedure. A bug fix about “timing of the trial frames” confirms that stimulus durations are counted in display frames, which is what you would expect from a protocol whose published durations are all integer multiples of 16.7 ms (see Protocol).</p>
+
+<h2 id="lineage">Lineage: thirty years from a lab effect to an app</h2>
+
+<p>This is a genuine sequence, so it is numbered by year.</p>
+
+<div class="table-wrap">
+<table>
+<thead><tr><th class="num">Year</th><th>Milestone</th></tr></thead>
+<tbody>
+<tr><td class="num">1993</td><td>Polat and Sagi describe <em>lateral masking</em>: a faint Gabor target is easier to detect when flanked by collinear high-contrast Gabors at the right distance, and harder when they are too close.</td></tr>
+<tr><td class="num">1998</td><td>Polat and colleagues show in cat primary visual cortex (<em>Nature</em>) that collinear flankers boost neuronal responses, most strongly for neurons driven near their contrast threshold.</td></tr>
+<tr><td class="num">2004</td><td>Training on lateral masking improves vision in adults with amblyopia (<em>PNAS</em>), challenging the idea that adult visual cortex is fixed.</td></tr>
+<tr><td class="num">2007</td><td>NeuroVision (Singapore) commercialises the same Gabor and lateral-masking principle for low myopia and early presbyopia (Durrie and McMinn).</td></tr>
+<tr><td class="num">2009</td><td>Polat publishes “Making perceptual learning practical to improve visual functions”, describing the structured clinical protocol.</td></tr>
+<tr><td class="num">2012</td><td>Polat, Levi and colleagues train 30 presbyopes at UC Berkeley (<em>Scientific Reports</em>); funded in part by Ucansi, in which Polat held stock.</td></tr>
+<tr><td class="num">2013</td><td>GlassesOff Inc. acquires Ucansi and launches an iPhone app; it later reports about one million users.</td></tr>
+<tr><td class="num">2014</td><td>Lev and colleagues report that the gain is largely in processing speed and transfers to crowded letter acuity.</td></tr>
+<tr><td class="num">2015</td><td>The US FTC settles with Carrot Neurotechnology over unsubstantiated claims for UltimEyes, a different vision-training app; a cautionary precedent for the whole category.</td></tr>
+<tr><td class="num">2016</td><td>Yehezkel and colleagues analyse 119 users trained on iPhone, iPod or PC: gains scale with how poor near acuity was at the start.</td></tr>
+<tr><td class="num">2018</td><td>Presbyopic Israeli Air Force pilots trained with the GlassesOff app improve on static and temporal acuity, stereoacuity, crowding and contrast measures.</td></tr>
+<tr><td class="num">2026</td><td>Oryx launches through optometrists; Tim Ferriss discusses it on episode #887.</td></tr>
+</tbody>
+</table>
+</div>
+
+<p>Other products built on the same science include NeuroVision, UltimEyes (Seitz, UC Riverside) and newer App Store titles that cite Polat’s work. None of them has the core algorithm as a trade secret; what differs is curriculum design, adaptivity and display handling.</p>
+
+<h2 id="physics">Physics: why blur is not the end of the story</h2>
+
+<h3>Presbyopia is an optical low-pass filter</h3>
+
+<p>The crystalline lens stiffens with age, so the eye can no longer add enough optical power for near targets. First complaints about reading typically appear between about 42 and 44, and by around 51 virtually everyone is affected. At a reading distance of 40 cm the eye needs 2.5 D of accommodation; whatever it cannot supply remains as defocus.</p>
+
+<p>In geometric optics, defocus spreads each point into a blur disc whose angular diameter is simply</p>
+
+<pre><code>β [rad] ≈ p [m] × ΔD [D]
+p  = pupil diameter
+ΔD = uncorrected defocus in dioptres</code></pre>
+
+<p>That gives the following blur-disc sizes in arcminutes:</p>
+
+<div class="table-wrap">
+<table>
+<thead><tr><th>Pupil</th><th class="num">0.5 D</th><th class="num">1.0 D</th><th class="num">1.5 D</th><th class="num">2.0 D</th></tr></thead>
+<tbody>
+<tr><td>2 mm (bright light)</td><td class="num">3.4′</td><td class="num">6.9′</td><td class="num">10.3′</td><td class="num">13.8′</td></tr>
+<tr><td>3 mm (typical indoor)</td><td class="num">5.2′</td><td class="num">10.3′</td><td class="num">15.5′</td><td class="num">20.6′</td></tr>
+<tr><td>4 mm (dim restaurant)</td><td class="num">6.9′</td><td class="num">13.8′</td><td class="num">20.6′</td><td class="num">27.5′</td></tr>
+</tbody>
+</table>
+</div>
+
+<p>For scale: newspaper text at 40 cm has letters of about 14′ and strokes of about 2.8′. Two consequences follow directly. First, dim light hurts twice: the pupil dilates, which enlarges the blur disc linearly, and lower luminance lowers contrast sensitivity. That is exactly the dim-menu scenario Ferriss described. Second, the residual defocus is smaller than the reading add itself, because an add is prescribed on top of whatever accommodation remains; the table is a per-dioptre ruler, not a mapping from prescription to blur.</p>
+
+<h3>What blur does in frequency space</h3>
+
+<p>A uniform blur disc of angular diameter β (in degrees) has the modulation transfer function</p>
+
+<pre><code>MTF(f) = 2·J₁(π β f) / (π β f)
+first zero at f₀ ≈ 1.22 / β     (β in degrees, f in cycles/degree)</code></pre>
+
+<p>The important point for a physicist: below the first zero, blur <em>attenuates</em> contrast rather than deleting information. With a 3 mm pupil and 1 D of residual defocus, a 4 cycles/degree component keeps about 52 % of its contrast and a 6 cycles/degree component about 15 %, while the first zero sits near 7 cycles/degree. If the observer’s neural contrast threshold drops, components that were sub-threshold become usable again. That is the physical opening the training exploits, and it is also its ceiling: beyond the first zero (and with phase reversals) no amount of neural gain recovers the signal.</p>
+
+<figure>
+<svg class="chart" viewBox="0 0 640 300" role="img" aria-labelledby="mtfTitle mtfDesc">
+<title id="mtfTitle">Modulation transfer of a defocused eye</title>
+<desc id="mtfDesc">Geometric-optics MTF for a 3 mm pupil at 0.5, 1.0 and 1.5 dioptres of defocus, from 0 to 12 cycles per degree.</desc>
+<line class="grid" x1="56" x2="620" y1="250.0" y2="250.0"/><text class="tick" x="48" y="254.0" text-anchor="end">-0.2</text><line class="axis" x1="56" x2="620" y1="212.3" y2="212.3"/><text class="tick" x="48" y="216.3" text-anchor="end">0.0</text><line class="grid" x1="56" x2="620" y1="174.7" y2="174.7"/><text class="tick" x="48" y="178.7" text-anchor="end">0.2</text><line class="grid" x1="56" x2="620" y1="137.0" y2="137.0"/><text class="tick" x="48" y="141.0" text-anchor="end">0.4</text><line class="grid" x1="56" x2="620" y1="99.3" y2="99.3"/><text class="tick" x="48" y="103.3" text-anchor="end">0.6</text><line class="grid" x1="56" x2="620" y1="61.7" y2="61.7"/><text class="tick" x="48" y="65.7" text-anchor="end">0.8</text><line class="grid" x1="56" x2="620" y1="24.0" y2="24.0"/><text class="tick" x="48" y="28.0" text-anchor="end">1.0</text><text class="tick" x="56.0" y="268" text-anchor="middle">0</text><text class="tick" x="150.0" y="268" text-anchor="middle">2</text><text class="tick" x="244.0" y="268" text-anchor="middle">4</text><text class="tick" x="338.0" y="268" text-anchor="middle">6</text><text class="tick" x="432.0" y="268" text-anchor="middle">8</text><text class="tick" x="526.0" y="268" text-anchor="middle">10</text><text class="tick" x="620.0" y="268" text-anchor="middle">12</text>
+<line class="mark" x1="244.0" x2="244.0" y1="24" y2="250"/>
+<line class="mark" x1="338.0" x2="338.0" y1="24" y2="250"/>
+<path class="c05" d="M56.0,24.0 L60.7,24.0 L65.4,24.1 L70.1,24.2 L74.8,24.3 L79.5,24.4 L84.2,24.6 L88.9,24.8 L93.6,25.1 L98.3,25.4 L103.0,25.7 L107.7,26.1 L112.4,26.5 L117.1,26.9 L121.8,27.3 L126.5,27.8 L131.2,28.4 L135.9,28.9 L140.6,29.5 L145.3,30.1 L150.0,30.8 L154.7,31.5 L159.4,32.2 L164.1,32.9 L168.8,33.7 L173.5,34.5 L178.2,35.4 L182.9,36.2 L187.6,37.1 L192.3,38.1 L197.0,39.0 L201.7,40.0 L206.4,41.0 L211.1,42.1 L215.8,43.2 L220.5,44.3 L225.2,45.4 L229.9,46.5 L234.6,47.7 L239.3,48.9 L244.0,50.2 L248.7,51.4 L253.4,52.7 L258.1,54.0 L262.8,55.3 L267.5,56.7 L272.2,58.1 L276.9,59.5 L281.6,60.9 L286.3,62.3 L291.0,63.8 L295.7,65.3 L300.4,66.8 L305.1,68.3 L309.8,69.8 L314.5,71.4 L319.2,72.9 L323.9,74.5 L328.6,76.1 L333.3,77.8 L338.0,79.4 L342.7,81.0 L347.4,82.7 L352.1,84.4 L356.8,86.1 L361.5,87.8 L366.2,89.5 L370.9,91.2 L375.6,93.0 L380.3,94.7 L385.0,96.5 L389.7,98.2 L394.4,100.0 L399.1,101.8 L403.8,103.6 L408.5,105.4 L413.2,107.2 L417.9,109.0 L422.6,110.8 L427.3,112.6 L432.0,114.4 L436.7,116.3 L441.4,118.1 L446.1,119.9 L450.8,121.8 L455.5,123.6 L460.2,125.4 L464.9,127.2 L469.6,129.1 L474.3,130.9 L479.0,132.7 L483.7,134.5 L488.4,136.4 L493.1,138.2 L497.8,140.0 L502.5,141.8 L507.2,143.6 L511.9,145.4 L516.6,147.2 L521.3,149.0 L526.0,150.7 L530.7,152.5 L535.4,154.3 L540.1,156.0 L544.8,157.7 L549.5,159.5 L554.2,161.2 L558.9,162.9 L563.6,164.6 L568.3,166.3 L573.0,167.9 L577.7,169.6 L582.4,171.2 L587.1,172.9 L591.8,174.5 L596.5,176.1 L601.2,177.7 L605.9,179.2 L610.6,180.8 L615.3,182.3 L620.0,183.8"/>
+<path class="c10" d="M56.0,24.0 L60.7,24.1 L65.4,24.3 L70.1,24.6 L74.8,25.1 L79.5,25.7 L84.2,26.5 L88.9,27.4 L93.6,28.4 L98.3,29.5 L103.0,30.8 L107.7,32.2 L112.4,33.7 L117.1,35.4 L121.8,37.2 L126.5,39.0 L131.2,41.1 L135.9,43.2 L140.6,45.4 L145.3,47.7 L150.0,50.2 L154.7,52.7 L159.4,55.3 L164.1,58.1 L168.8,60.9 L173.5,63.8 L178.2,66.8 L182.9,69.8 L187.6,73.0 L192.3,76.2 L197.0,79.4 L201.7,82.7 L206.4,86.1 L211.1,89.5 L215.8,93.0 L220.5,96.5 L225.2,100.0 L229.9,103.6 L234.6,107.2 L239.3,110.8 L244.0,114.5 L248.7,118.1 L253.4,121.8 L258.1,125.4 L262.8,129.1 L267.5,132.7 L272.2,136.4 L276.9,140.0 L281.6,143.6 L286.3,147.2 L291.0,150.7 L295.7,154.3 L300.4,157.8 L305.1,161.2 L309.8,164.6 L314.5,167.9 L319.2,171.2 L323.9,174.5 L328.6,177.7 L333.3,180.8 L338.0,183.8 L342.7,186.8 L347.4,189.8 L352.1,192.6 L356.8,195.4 L361.5,198.1 L366.2,200.7 L370.9,203.2 L375.6,205.6 L380.3,208.0 L385.0,210.3 L389.7,212.4 L394.4,214.5 L399.1,216.5 L403.8,218.4 L408.5,220.2 L413.2,222.0 L417.9,223.6 L422.6,225.1 L427.3,226.5 L432.0,227.9 L436.7,229.1 L441.4,230.3 L446.1,231.3 L450.8,232.3 L455.5,233.2 L460.2,234.0 L464.9,234.7 L469.6,235.3 L474.3,235.8 L479.0,236.3 L483.7,236.6 L488.4,236.9 L493.1,237.1 L497.8,237.2 L502.5,237.2 L507.2,237.2 L511.9,237.1 L516.6,237.0 L521.3,236.7 L526.0,236.4 L530.7,236.1 L535.4,235.7 L540.1,235.2 L544.8,234.7 L549.5,234.1 L554.2,233.5 L558.9,232.8 L563.6,232.1 L568.3,231.4 L573.0,230.6 L577.7,229.8 L582.4,229.0 L587.1,228.1 L591.8,227.2 L596.5,226.3 L601.2,225.4 L605.9,224.5 L610.6,223.5 L615.3,222.6 L620.0,221.6"/>
+<path class="c15" d="M56.0,24.0 L60.7,24.2 L65.4,24.6 L70.1,25.4 L74.8,26.5 L79.5,27.8 L84.2,29.5 L88.9,31.5 L93.6,33.7 L98.3,36.3 L103.0,39.1 L107.7,42.1 L112.4,45.4 L117.1,49.0 L121.8,52.7 L126.5,56.7 L131.2,60.9 L135.9,65.3 L140.6,69.8 L145.3,74.6 L150.0,79.4 L154.7,84.4 L159.4,89.5 L164.1,94.8 L168.8,100.1 L173.5,105.4 L178.2,110.8 L182.9,116.3 L187.6,121.8 L192.3,127.3 L197.0,132.8 L201.7,138.2 L206.4,143.6 L211.1,149.0 L215.8,154.3 L220.5,159.5 L225.2,164.6 L229.9,169.6 L234.6,174.5 L239.3,179.3 L244.0,183.9 L248.7,188.3 L253.4,192.6 L258.1,196.7 L262.8,200.7 L267.5,204.4 L272.2,208.0 L276.9,211.4 L281.6,214.5 L286.3,217.5 L291.0,220.2 L295.7,222.8 L300.4,225.1 L305.1,227.2 L309.8,229.1 L314.5,230.8 L319.2,232.3 L323.9,233.6 L328.6,234.7 L333.3,235.6 L338.0,236.3 L342.7,236.8 L347.4,237.1 L352.1,237.2 L356.8,237.2 L361.5,237.0 L366.2,236.7 L370.9,236.2 L375.6,235.6 L380.3,234.9 L385.0,234.1 L389.7,233.1 L394.4,232.1 L399.1,231.0 L403.8,229.8 L408.5,228.5 L413.2,227.2 L417.9,225.9 L422.6,224.5 L427.3,223.0 L432.0,221.6 L436.7,220.2 L441.4,218.7 L446.1,217.3 L450.8,215.9 L455.5,214.5 L460.2,213.1 L464.9,211.8 L469.6,210.6 L474.3,209.4 L479.0,208.2 L483.7,207.1 L488.4,206.1 L493.1,205.2 L497.8,204.3 L502.5,203.5 L507.2,202.8 L511.9,202.2 L516.6,201.6 L521.3,201.2 L526.0,200.8 L530.7,200.5 L535.4,200.3 L540.1,200.2 L544.8,200.2 L549.5,200.2 L554.2,200.4 L558.9,200.6 L563.6,200.8 L568.3,201.2 L573.0,201.6 L577.7,202.0 L582.4,202.5 L587.1,203.1 L591.8,203.7 L596.5,204.3 L601.2,205.0 L605.9,205.7 L610.6,206.5 L615.3,207.2 L620.0,208.0"/>
+<text class="lab c05t" x="535.4" y="144.5">0.5 D</text>
+<text class="lab c10t" x="330.9" y="137.0" text-anchor="end">1.0 D</text>
+<text class="lab c15t" x="175.8" y="152.1">1.5 D</text>
+<text class="axlab" x="338.0" y="296" text-anchor="middle">Spatial frequency (cycles per degree)</text>
+<text class="axlab" x="14" y="137.0" text-anchor="middle" transform="rotate(-90 14 137.0)">Contrast transmitted</text>
+</svg>
+<figcaption>Geometric-optics MTF of a 3 mm pupil with 0.5, 1.0 and 1.5 D of defocus (diffraction and higher-order aberrations ignored; computed for this report). Dashed lines mark 4 and 6 cycles/degree, the middle of the 2–8 cycles/degree range used in training. Negative values are phase reversals.</figcaption>
+</figure>
+
+<p>Two empirical findings fit this picture. Watson and Ahumada showed that blur detection and discrimination behave like contrast detection, so improving contrast detection should improve the handling of blur. And in the 119-person study the improvement was, on average, about 0.18 logMAR regardless of where people ended up, roughly a constant factor of 1.5 relative to post-training acuity. The authors read this as a fundamental optical limit: the brain learns to interpret the blurred image more efficiently, but it cannot exceed what the optics deliver.</p>
+
+<h3>The stimulus: a Gabor patch</h3>
+
+<p>Every training trial is built from Gabor patches, a sinusoidal grating under a Gaussian window. In luminance terms:</p>
+
+<pre><code>L(x, y) = L₀ · [ 1 + C · exp(−(x² + y²) / 2σ²) · cos(2π f·u + φ) ]
+u = x·cos θ + y·sin θ        C = Michelson contrast, f = spatial frequency, θ = carrier direction</code></pre>
+
+<p>Gabors are used because they are compact in both space and spatial frequency, which matches the receptive fields of orientation- and frequency-tuned neurons in primary visual cortex (V1); a Gabor drives a narrow population of those neurons efficiently. In the published protocol, σ is set so that at least two cycles are visible, spatial frequencies span 2–8 cycles/degree, patch sizes run from 0.18° to 1°, and four orientations are used (0°, 45°, 90°, 135°).</p>
+
+<h3>Display physics you cannot skip</h3>
+
+<h4>Geometry</h4>
+<p>At 40 cm one degree of visual angle is 6.98 mm on the screen. The 2016 iOS study used a pixel pitch of 0.078 mm, so about 89 pixels per degree, or about 11 pixels per cycle at 8 cycles/degree. Current phones and tablets have finer pitch, so sampling is not the problem. Distance is: every centimetre of error changes the delivered spatial frequency proportionally, which is why the study fixed 40 cm and why you need a way to measure it.</p>
+
+<h4>Contrast resolution</h4>
+<p>Thresholds for trained observers fall to a few percent and below. An 8-bit display cannot represent that well: the GlassesOff authors note that with 256 grey levels the smallest luminance step near mid-grey exceeds 1 %, and they capped the lowest contrast just above 1 %. Psychophysics labs have long worked around this. Tyler’s <em>bit-stealing</em> mixes slightly different R, G and B levels to obtain about 1,786 luminance steps from an 8-bit colour display. The <em>noisy-bit</em> method adds a small random offset before quantisation, which makes the average luminance effectively continuous; it was shown not to affect contrast thresholds at ordinary resolutions. A GPU shader makes either trivial.</p>
+
+<h4>Timing</h4>
+<p>Durations must be counted in frames. All values in the 2016 study are frame multiples at 60 Hz: target durations of 34, 68 and 116 ms are 2, 4 and 7 frames; mask delays of 68, 83, 116 and 150 ms are 4, 5, 7 and 9 frames. On 120 Hz displays, refresh can change dynamically, so you must lock or measure it. Browser-based timing is usable but not lab-grade: in a large timing comparison, the best web tools reached a few milliseconds of precision, while native lab software stayed below one millisecond.</p>
+
+<h4>Luminance and environment</h4>
+<p>The study set display luminance to maximum (about 120 cd/m² on the devices used) in an otherwise dark room. On a modern phone you must also disable auto-brightness, colour-temperature features (True Tone, Night Shift) and anything that remaps tones. OLED panels can flicker at low brightness, another reason to train at full brightness.</p>
+
+<h2 id="biology">Biology: what exactly is being trained</h2>
+
+<h3>The V1 front end</h3>
+<p>Neurons in primary visual cortex respond to local oriented contrast at a preferred spatial frequency. Blur from presbyopia feeds them a weaker, lower-contrast signal; because contrast drives cortical responses, the result is weaker and slower responses, and letters become harder and slower to identify. The training does not try to sharpen the retinal image. It tries to make this cortical machinery extract more from the degraded input.</p>
+
+<h3>Lateral interactions: the collinear trick</h3>
+<p>A faint target Gabor becomes easier to detect when two high-contrast Gabors of the same orientation are placed along its axis, roughly two to four wavelengths (λ) away. Closer than about 2λ, especially with non-collinear flankers or a high-contrast target, the effect turns into suppression. Recordings in cat and monkey V1 show collinear flankers increasing responses to a central target, most of all when the target is near threshold. The leading explanation is the network of long-range horizontal connections that links V1 neurons with similar orientation preference, with feedback from higher areas probably contributing at larger distances. One psychophysical estimate of the propagation speed, about 0.1 m/s, matches the slow conduction of those horizontal fibres.</p>
+<p>Why train on this? Polat’s argument is that practising detection at the edge of facilitation strengthens these interactions: a patent describing the method reports an increased range of excitatory interactions and reduced inhibition after training, in humans and monkeys. A stronger, cleaner lateral network raises effective gain for low-contrast input, which is what a blurred letter is.</p>
+
+<h3>Time: backward masking and processing speed</h3>
+<p>In the masking conditions, the flankers (or a crowd of patches) reappear shortly after the target. A mask at around 50 ms after the target cancels collinear facilitation, so the observer succeeds only if the target has been processed before the mask interferes. Training pushes that window shorter. In young adults, a similar protocol shortened the latency of an ERP marker by about 20 ms. In the 2014 study, the time needed to reach 6/6 acuity under crowded conditions fell by 81 ms, with only subtle change in contrast sensitivity. Oryx’s marketing line about capturing “more visual samples per second” is a lay translation of this result.</p>
+
+<h3>Crowding</h3>
+<p>Crowding, the failure to recognise an object among clutter, is classically a peripheral phenomenon, but Polat’s group reports it in the fovea of presbyopes and finds it scales with acuity in ageing eyes. Reading is the ultimate crowded task: letters within words, words within lines. The training therefore includes arrays of 4–11 flankers, and its gains transfer to crowded letter charts and to reading speed.</p>
+
+<h3>Perceptual learning in general</h3>
+<p>Perceptual learning, improvement through practice on a demanding perceptual task, is classically specific to the trained orientation, location and stimulus, which was taken as evidence for plasticity in early visual cortex. Later work showed that specificity depends on the procedure: task precision, difficulty, number of trials and schedule all matter, and “double training” (practising a second, seemingly irrelevant task at another location) can produce complete transfer. Models describe learning as retuning of early representations, reweighting of their read-out, or both. For a builder this has a practical meaning: vary orientation, spatial frequency and spacing across sessions, keep difficulty near threshold, and do not drill one stimulus to exhaustion.</p>
+
+<h3>What is not happening</h3>
+<ul class="marks">
+<li class="ok">No optical change: accommodation, pupil size and depth of focus were measured objectively before and after training and did not change.</li>
+<li class="ok">Not “eye exercises”. A study of a popular read-without-glasses exercise program found no objective improvement in near vision, even though most participants said their vision had improved. An independent Korean study found that alternating fixation between near and far screens worked no better, and if anything slightly worse, than training at a fixed distance.</li>
+<li class="ok">Not blur adaptation. The authors argue blur adaptation is short-lived and would already have solved presbyopic reading if it were enough; they favour increased neural gain (“de-blurring”) plus faster processing.</li>
+</ul>
+
+<h2 id="protocol">Reconstructed training protocol</h2>
+
+<p>Oryx’s exact algorithm is proprietary. The table below is the published GlassesOff/Polat protocol, which Oryx cites, with Oryx’s public deviations noted. Values come from the 2012 Berkeley study (PC) and the 2016 multi-device study (iOS and PC).</p>
+
+<div class="table-wrap">
+<table>
+<thead><tr><th>Parameter</th><th>Published value</th><th>Notes for a rebuild</th></tr></thead>
+<tbody>
+<tr><td>Viewing</td><td>40 cm, both eyes open, habitual distance correction, no near correction</td><td>Oryx: no readers or multifocals during training</td></tr>
+<tr><td>Environment</td><td>Dark room; display at maximum luminance (≈120 cd/m² on iOS)</td><td>Disable auto-brightness, True Tone, Night Shift</td></tr>
+<tr><td>Stimulus</td><td>Gabor patches; 2–8 cycles/degree; 0.18–1° size; orientations 0, 45, 90, 135°; at least 2 visible cycles</td><td>Start frequency chosen from initial acuity</td></tr>
+<tr><td>Condition 1</td><td>Single target</td><td>Baseline contrast detection</td></tr>
+<tr><td>Condition 2</td><td>Target with two collinear flankers at several target–flanker distances; flanker contrast 40 % (2012) or 60 % (2016)</td><td>Distances varied across 2–4λ</td></tr>
+<tr><td>Condition 3</td><td>Crowding: 4–11 iso-oriented flankers, collinear or not, several distances</td><td>Added in the mobile protocol</td></tr>
+<tr><td>Condition 4</td><td>Backward masking: the flankers or crowd array reappear after an inter-stimulus interval</td><td>ISI 68, 83, 116, 150 ms (2016) or 60–240 ms (2012)</td></tr>
+<tr><td>Durations</td><td>Target 34, 68, 116 ms (iOS); 60–120 ms (PC); mask lasts as long as the target</td><td>= 2, 4, 7 frames at 60 Hz</td></tr>
+<tr><td>Task</td><td>Two-interval forced choice: which of two intervals held the target? Fixation circle 0.7°, shown 200 ms; intervals 500 ms apart with a 300 ms blank and temporal jitter</td><td>Responses by tap or key</td></tr>
+<tr><td>Feedback</td><td>Auditory and visual after every trial</td><td>Oryx adds per-block score cards</td></tr>
+<tr><td>Within session</td><td>Contrast threshold estimated by a staircase in each block</td><td>Contrast floor just above 1 % on 8-bit displays</td></tr>
+<tr><td>Between sessions</td><td>Change one parameter at a time based on the last session: ISI, duration, orientation, spatial frequency, spacing. Orientation every 2 sessions; frequency steps up after a contrast criterion is reached</td><td>The criterion value is not published; choose and test your own</td></tr>
+<tr><td>Dose</td><td>≈210 trials per session on iOS (≈12 min), ≈350 on PC (≈30 min); 25–65 sessions, at least 3 per week; stop at plateau, minimum 25. Totals averaged about 9,200 trials (iOS) and 13,000 (PC)</td><td>Oryx: daily, ≤10 min, 30–40 sessions</td></tr>
+<tr><td>Compliance</td><td>Home training, monitored online with automatic reminders</td><td>Build reminders and adherence logging in from day one</td></tr>
+</tbody>
+</table>
+</div>
+
+<p>A single 2AFC trial with backward masking runs like this (durations from the published protocol; frames at 60 Hz):</p>
+
+<div class="timeline" role="list" aria-label="Trial timeline">
+  <div role="listitem"><b>Fixation</b>200 ms</div>
+  <div role="listitem"><b>Blank</b>300 ms, jittered</div>
+  <div role="listitem" class="stim"><b>Interval 1</b>flankers ± target, 2–7 frames</div>
+  <div role="listitem"><b>ISI</b>4–9 frames</div>
+  <div role="listitem" class="stim"><b>Mask</b>flankers again</div>
+  <div role="listitem"><b>Gap</b>500 ms</div>
+  <div role="listitem" class="stim"><b>Interval 2</b>the other interval, then its mask</div>
+  <div role="listitem" class="resp"><b>Response</b>1 or 2, then feedback</div>
+</div>
+<p class="small">Only one interval contains the target; both contain the flankers and the mask.</p>
+
+<h2 id="demo">Live demo: one trial of the method</h2>
+
+<p>This is a working miniature of the task, drawn pixel by pixel in linear luminance, encoded to sRGB and dithered with the noisy-bit method. It measures your display’s refresh rate and counts durations in frames. A 2-down/1-up staircase adjusts target contrast, so after 30–40 trials the estimate approaches the contrast you detect about 71 % of the time.</p>
+
+<div class="note"><p><strong>Demo only.</strong> It is not calibrated for your screen’s luminance, gamma or pixel density, and it does not know your viewing distance, so it cannot train or measure anything clinically. Use it to see the stimulus logic and the frame timing.</p></div>
+
+<div class="demo" id="demoBox">
+  <canvas id="stim" aria-label="Gabor stimulus: target between flankers"></canvas>
+  <div class="controls">
+    <label>Condition
+      <select id="cond">
+        <option value="single">Target alone</option>
+        <option value="lm" selected>Two collinear flankers</option>
+        <option value="crowd">Crowding: 8 surrounding flankers</option>
+      </select>
+    </label>
+    <label>Orientation of the bars
+      <select id="ori">
+        <option value="0">Vertical</option>
+        <option value="45">45°</option>
+        <option value="90">Horizontal</option>
+        <option value="135">135°</option>
+      </select>
+    </label>
+    <label>Target–flanker distance <output id="sepOut">3 λ</output>
+      <input type="range" id="sep" min="1" max="6" step="0.5" value="3">
+    </label>
+    <label>Target contrast <output id="tcOut">8 %</output>
+      <input type="range" id="tc" min="0.3" max="40" step="0.1" value="8">
+    </label>
+    <label>Target duration
+      <select id="dur"></select>
+    </label>
+    <label class="inline"><input type="checkbox" id="bm"> Backward mask after</label>
+    <label>Mask delay (ISI)
+      <select id="isi"></select>
+    </label>
+  </div>
+  <div class="trialbar">
+    <button class="primary" id="start" type="button">Run a trial</button>
+    <button id="r1" type="button" disabled>Target in interval 1</button>
+    <button id="r2" type="button" disabled>Target in interval 2</button>
+    <button id="reset" type="button">Reset staircase</button>
+  </div>
+  <p id="status" aria-live="polite">Measuring refresh rate…</p>
+</div>
+<p class="small">Keyboard: press 1 or 2 to answer, space to run the next trial. Flanker contrast is fixed at 60 %, as in the 2016 protocol. In the crowding layout, flankers 2–3λ apart fuse into a texture around the target; that fusion is what crowding means. Try moving the flankers from 1λ to 3λ while keeping the target faint: on most screens the target is easier to see at around 3λ than at 1λ.</p>
+
+<h2 id="evidence">Evidence: how strong is it?</h2>
+
+<div class="legend"><span class="ok">holds up across sources</span><span class="caveat">caveat or open question</span></div>
+<p class="small">The colours borrow from the red–green duochrome test optometrists use to check focus.</p>
+
+<div class="table-wrap">
+<table>
+<thead><tr><th>Study</th><th>Design and sample</th><th>Main result</th><th>Independence</th></tr></thead>
+<tbody>
+<tr><td>Polat, Levi et al. 2012, <em>Sci Rep</em></td><td>30 presbyopes (mean age 51), ≈37 sessions over 3 months at UC Berkeley; 3 untrained controls; 7 young reference subjects</td><td>Near acuity 2.44′ → 1.56′ (×1.6, “≈8.6 years younger”); reading at smallest print +17 wpm; contrast thresholds 19–34 % lower at 2–6 c/deg; optics unchanged</td><td class="caveat">Funded partly by Ucansi; Polat paid and held stock; controls not randomised (authors call for a large RCT)</td></tr>
+<tr><td>Lev et al. 2014, <em>Sci Rep</em></td><td>Gabor detection at reading distance under spatial and temporal constraints</td><td>Processing time to reach 6/6 crowded acuity cut by 81 ms; gains at near and untrained far distance; little change in contrast sensitivity</td><td class="caveat">Polat group</td></tr>
+<tr><td>Yehezkel et al. 2016, <em>Sci Rep</em></td><td>119 adults aged 40–63, home training on iPhone, iPod or PC, 25–65 sessions; 10 test–retest controls</td><td>Near acuity 0.31 → 0.13 logMAR; reading speed at minimal font 52 → 77 wpm (n = 63); bigger gains with worse starting acuity; device type and session length made no difference</td><td class="caveat">Three authors were GlassesOff employees, Polat held stock; controls not randomised</td></tr>
+<tr><td>Sterkin et al. 2018, <em>Vision Res</em></td><td>Presbyopic Israeli Air Force pilots, GlassesOff app at 40 cm</td><td>Improved static and temporal acuity, stereoacuity, crowding, contrast sensitivity and discrimination</td><td class="caveat">Polat group</td></tr>
+<tr><td>DeLoss, Watanabe, Andersen 2015, <em>Psych Sci</em></td><td>Adults 65+ and students, 7 days of orientation discrimination in noise</td><td>Older adults’ contrast sensitivity reached young adults’ pre-training level; near acuity improved in the older group</td><td class="ok">Independent (UC Riverside, Brown), different task</td></tr>
+<tr><td>UNIST (Korea), presbyopia training study</td><td>Two training groups of 8 (ages 47–65) plus a control; sharpness discrimination</td><td>Both groups improved on Landolt C acuity; alternating near–far fixation no better than fixed distance</td><td class="ok">Independent, small</td></tr>
+<tr><td>Hopkins et al. 2012, <em>Optom Vis Sci</em></td><td>Commercial read-without-glasses exercise program; 8 completers</td><td>No objective near-vision benefit, yet 87.5 % reported improvement</td><td class="ok">Independent; shows how strong expectation effects are</td></tr>
+<tr><td>Systematic review (Abdollahi et al.)</td><td>Studies 1990–2024 on vision therapy and perceptual learning in presbyopia</td><td>Promising as a non-invasive adjunct; standardised randomised trials still needed</td><td class="ok">Independent</td></tr>
+</tbody>
+</table>
+</div>
+
+<h3>Verdict</h3>
+<ul class="marks">
+<li class="ok">The direction of the effect is consistent across devices, ages and several labs, including independent groups using different tasks.</li>
+<li class="ok">The mechanism story is coherent: better contrast detection, faster processing and less crowding, with the eye’s optics demonstrably unchanged.</li>
+<li class="ok">The dose is modest: roughly 25–40 sessions; in the 119-person data neither device type nor 12- versus 30-minute sessions changed the gain.</li>
+<li class="caveat">I found no sham-controlled randomised trial in presbyopia. Controls were 3 and 10 people, not randomised, so test familiarity and expectation are not fully excluded.</li>
+<li class="caveat">Most presbyopia data come from people paid by, employed by or holding stock in the companies. Ferriss disclosed that he is an investor.</li>
+<li class="caveat">Durability: the 15-year maintenance claim rests on 19 people and unpublished company data.</li>
+<li class="caveat">Outcomes were measured on charts under standard lighting; benefit in dim, real-world reading is plausible but less documented.</li>
+<li class="caveat">The gain has an optical ceiling. With adds above about +1.50 D, complete independence from readers is unlikely.</li>
+</ul>
+
+<p>A precedent worth knowing: in 2015–16 the FTC required the makers of UltimEyes, another vision-training app, to stop claiming it was scientifically proven to improve vision, fined them $150,000, and objected that the cited research was run by a co-owner without disclosure. Researchers in the field protested that the FTC’s bar (including double-blind studies) was higher than the field’s norms. Either way, it shows where the regulatory line sits for health claims.</p>
+
+<p><strong>Physicist’s reading:</strong> this is a gain-and-speed adjustment of a noisy detector looking through a low-pass filter. It can buy about one and a half to two chart lines when the filter still passes the relevant frequencies at reduced contrast. It cannot restore frequencies past the first MTF zero. That makes it most useful for early presbyopes, for dim-light reading and for delaying the first pair of readers, which is also what Oryx’s own suitability rules say.</p>
+
+<h2 id="build">Build plan: a comparable trainer with Claude Code</h2>
+
+<p>The algorithm is a weekend. A trustworthy instrument is the project. Spend most of the effort on calibration, timing and measurement, and treat it as a test-automation problem: every claim the software makes about what it showed must be logged and verifiable.</p>
+
+<h3>Choose a platform</h3>
+<div class="table-wrap">
+<table>
+<thead><tr><th>Platform</th><th>Timing</th><th>Contrast control</th><th>Viewing distance</th><th>Best use</th></tr></thead>
+<tbody>
+<tr><td>Python + PsychoPy on a laptop</td><td>Lab-grade, sub-millisecond in published tests</td><td>Gamma calibration and high-bit-depth display hardware supported; Psychtoolbox adds a bit-stealing mode</td><td>Tape measure or chin rest</td><td>Validating the protocol on yourself, fast iteration</td></tr>
+<tr><td>Web app (WebGL, installable PWA)</td><td>A few ms of jitter, varies by browser</td><td>Shader dithering works; gamma assumed sRGB unless measured</td><td>Blind-spot “virtual chinrest” (≈3 cm average error) or webcam face size</td><td>Prototype you can share; lowest effort with Claude Code</td></tr>
+<tr><td>Native iPad or iPhone (Swift, Metal)</td><td>Frame-locked with CADisplayLink; refresh rate can be pinned</td><td>Full shader control; Apple panels are consistent across a model</td><td>TrueDepth camera via ARKit face tracking gives continuous distance</td><td>The real product form factor (what Oryx uses)</td></tr>
+<tr><td>Native Android</td><td>Choreographer frame callbacks; device variance is large</td><td>As above, but panels vary more</td><td>Face-landmark or iris-size estimation</td><td>Second platform, after the protocol is proven</td></tr>
+</tbody>
+</table>
+</div>
+<p>My recommendation: prove it in PsychoPy first (a few weeks on yourself), then build native iPad. A web version is fine for demos, not for measurement.</p>
+
+<h3>Architecture</h3>
+<div class="table-wrap">
+<table>
+<thead><tr><th>Module</th><th>Job</th><th>Key details</th></tr></thead>
+<tbody>
+<tr><td>Calibration</td><td>Make geometry and luminance known</td><td>Pixels per mm (device table or card match), viewing distance (ARKit or blind-spot test), refresh rate (measured), gamma (photometer once per device model; fallback sRGB/Display P3 curve)</td></tr>
+<tr><td>Stimulus renderer</td><td>Draw Gabors exactly</td><td>GPU shader; sum patches in linear light; encode through gamma; noisy-bit dither; specify everything in degrees and convert</td></tr>
+<tr><td>Frame scheduler</td><td>Show each frame exactly when intended</td><td>Precomputed frame list per trial; vsync callback; log intended vs. presented timestamps; void trials with dropped frames</td></tr>
+<tr><td>Trial engine</td><td>2AFC logic and feedback</td><td>Fixation, jitter, two intervals, masks, response capture, audio and visual feedback</td></tr>
+<tr><td>Staircase</td><td>Find threshold within a block</td><td>2-down/1-up on log contrast (≈71 %) or a Bayesian method such as QUEST+; lapse handling</td></tr>
+<tr><td>Curriculum engine</td><td>Decide the next session</td><td>JSON-defined program; one parameter changed per session; orientation every 2 sessions; frequency steps on a threshold criterion; plateau detection; minimum session count</td></tr>
+<tr><td>Outcome tests</td><td>Measure what matters, separately from training</td><td>Near letter acuity in 0.1 logMAR steps (uncrowded, crowded, time-limited), reading speed at small print, contrast thresholds at 2/4/6 c/deg</td></tr>
+<tr><td>Data and analytics</td><td>Every trial, forever</td><td>Local SQLite; CSV export; learning curves; per-session thresholds; adherence</td></tr>
+</tbody>
+</table>
+</div>
+
+<h3>Core code</h3>
+<h4>Gabor fragment shader with noisy-bit dithering (WebGL 1 / GLSL ES)</h4>
+<pre><code>precision highp float;
+uniform vec2  uCenter;   // patch centre in device pixels
+uniform float uLambda;   // pixels per cycle = pxPerDeg / cpd
+uniform float uSigma;    // pixels (e.g. = uLambda for ~2 visible cycles)
+uniform float uTheta;    // carrier direction in radians
+uniform float uC;        // Michelson contrast of this patch
+uniform float uMean;     // mean luminance, linear 0..1
+uniform float uGamma;    // fitted display gamma (replace with measured LUT if you can)
+uniform float uSeed;     // new value every frame
+
+float hash(vec2 p) {
+  return fract(sin(dot(p, vec2(12.9898, 78.233)) + uSeed) * 43758.5453);
+}
+
+void main() {
+  vec2  d = gl_FragCoord.xy - uCenter;
+  float u = d.x * cos(uTheta) + d.y * sin(uTheta);
+  float g = exp(-dot(d, d) / (2.0 * uSigma * uSigma)) * cos(6.2831853 * u / uLambda);
+  float L = uMean * (1.0 + uC * g);                    // linear luminance
+  float code = 255.0 * pow(clamp(L, 0.0, 1.0), 1.0 / uGamma);
+  code = floor(code + hash(gl_FragCoord.xy));          // stochastic rounding: E[code] exact
+  gl_FragColor = vec4(vec3(code / 255.0), 1.0);
+}
+// For flankers and crowding: sum g over an array of patch uniforms before computing L.</code></pre>
+
+<h4>Staircase and a simulated-observer test (Python, verified for this report)</h4>
+<pre><code>import math, random
+
+class Staircase:
+    """2-down / 1-up on log10 contrast; converges near 70.7 % correct."""
+    def __init__(self, c0=0.2, step=0.1, floor=0.01, ceil=0.9):
+        self.logc, self.step = math.log10(c0), step
+        self.lo, self.hi = math.log10(floor), math.log10(ceil)
+        self.streak, self.last_dir, self.reversals = 0, 0, []
+
+    @property
+    def contrast(self):
+        return 10 ** self.logc
+
+    def update(self, correct: bool):
+        if correct:
+            self.streak += 1
+            if self.streak &lt; 2:
+                return
+            self.streak, direction = 0, -1
+        else:
+            self.streak, direction = 0, +1
+        if self.last_dir and direction != self.last_dir:
+            self.reversals.append(self.logc)
+        self.last_dir = direction
+        self.logc = min(self.hi, max(self.lo, self.logc + direction * self.step))
+
+    def threshold(self, n=8):
+        r = self.reversals[-n:]
+        return 10 ** (sum(r) / len(r)) if r else None
+
+
+def weibull(c, alpha=0.04, beta=3.0, guess=0.5, lapse=0.02):
+    return guess + (1 - guess - lapse) * (1 - math.exp(-(c / alpha) ** beta))
+
+
+def test_staircase_recovers_simulated_threshold():
+    # true 70.7 % point of this observer is ~0.033
+    ests = []
+    for seed in range(200):
+        rng = random.Random(seed)
+        s = Staircase(c0=0.3)
+        for _ in range(300):
+            s.update(rng.random() &lt; weibull(s.contrast))
+        ests.append(s.threshold())
+    med = sorted(ests)[len(ests) // 2]
+    assert 0.028 &lt; med &lt; 0.040, med      # observed median: 0.031</code></pre>
+<p class="small">Run here: median estimate 0.031 against a true value of 0.033, with a 5–95 % range of 0.019–0.041 over 200 simulated runs of 300 trials. That spread is the honest noise floor of a single block, and it is why you should judge progress on session trends, not single numbers.</p>
+
+<h4>A curriculum session as data</h4>
+<pre><code>{
+  "session": 14,
+  "distance_cm": 40,
+  "blocks": [
+    { "condition": "LM",     "cpd": 4, "theta_deg": 45, "flank_contrast": 0.6,
+      "sep_lambda": [2, 3, 4], "dur_frames": 4, "trials": 50 },
+    { "condition": "BM-LM",  "cpd": 4, "theta_deg": 45, "flank_contrast": 0.6,
+      "sep_lambda": [3], "dur_frames": 4, "isi_frames": [5, 7], "trials": 50 },
+    { "condition": "CROWD",  "cpd": 4, "theta_deg": 45, "n_flankers": 8,
+      "sep_lambda": [3], "dur_frames": 4, "trials": 50 },
+    { "condition": "SINGLE", "cpd": 6, "theta_deg": 45, "dur_frames": 4, "trials": 50 }
+  ],
+  "progression": {
+    "change_one_param_per_session": true,
+    "rotate_orientation_every_n_sessions": 2,
+    "raise_cpd_when_threshold_below": 0.05,
+    "stop_when_plateau_sessions": 4,
+    "min_sessions": 25
+  }
+}</code></pre>
+<p class="small">The 0.05 criterion and the plateau rule are placeholders; the papers do not publish them.</p>
+
+<h3>Working with Claude Code</h3>
+<p>Give Claude Code the protocol as data and the physics as non-negotiable rules, then build module by module behind tests. A starter <code>CLAUDE.md</code>:</p>
+<pre><code># Near-vision perceptual-learning trainer (personal research use)
+
+## Non-negotiables
+- Every stimulus duration is an integer number of frames at the measured refresh rate.
+- Log intended vs. presented frame timestamps for every trial; trials with drops are void.
+- Contrast is specified in linear luminance, encoded through the display LUT, then dithered.
+- All geometry is in degrees of visual angle, converted with measured px/mm and distance.
+- Training stimuli and outcome tests never share code paths or stimuli.
+- Every change to adaptive logic ships with a simulated-observer test.
+
+## Reference
+- docs/protocol.md   parameter table (Polat 2012, Yehezkel 2016)
+- docs/curriculum.json
+- docs/calibration.md</code></pre>
+
+<p>Prompts that work well in sequence:</p>
+<ol>
+<li>“Read docs/protocol.md. Plan a PsychoPy implementation of SINGLE, LM, CROWD and BM-LM with frame-based timing. List open questions before writing code.”</li>
+<li>“Implement the stimulus renderer with linear-light summation and noisy-bit dithering. Tests: mean code-value error over 100,000 pixels below 0.05; pixels-per-degree within 0.5 % of the reference calculation.”</li>
+<li>“Implement the staircase and a Weibull simulated observer. Report bias and spread of the threshold estimate for 50-, 100- and 210-trial blocks over 500 runs.”</li>
+<li>“Implement the curriculum engine from docs/curriculum.json with property-based tests for the rule invariants (one parameter per session, orientation rotation, minimum sessions).”</li>
+<li>“Port the renderer to Metal with CADisplayLink and ARKit face-distance tracking; write an XCTest that fails if more than 1 % of trials drop a frame.”</li>
+</ol>
+
+<h3>Validate the instrument</h3>
+<ul>
+<li><strong>Timing:</strong> film the screen with a phone’s 240 fps slow-motion mode (about 4 ms per frame) and count presented frames of a test flash against the log.</li>
+<li><strong>Luminance:</strong> measure about 17 grey levels with a photometer or colorimeter, fit gamma, and verify the dithered mean of a uniform patch.</li>
+<li><strong>Geometry:</strong> render a 10° bar and measure it at 40 cm with a ruler.</li>
+<li><strong>Adaptive logic:</strong> simulated observers with known thresholds, slopes and lapse rates, run in CI.</li>
+</ul>
+
+<h3>Run it on yourself properly</h3>
+<ol>
+<li>Get an eye exam first to rule out cataract, glaucoma or macular disease, and to know your add.</li>
+<li>Measure a baseline twice, a week apart: near letter acuity at 40 cm on a printed chart under fixed lighting (include a dim condition), reading speed at the smallest print you can read, and contrast thresholds. Use two chart versions so you cannot memorise letters.</li>
+<li>Decide in advance what counts as success. The 2016 paper quotes MNREAD repeatability of about ±0.05 logMAR and ±8.6 words per minute; a real effect should clearly exceed that.</li>
+<li>Train 30–40 sessions at a fixed time and place, without readers.</li>
+<li>Post-test with the identical procedure, ideally with someone else running the chart, then retest after 4–8 weeks without training to check retention.</li>
+</ol>
+
+<h3>Pitfalls</h3>
+<ul>
+<li>Training with readers on, or at a drifting distance: both change the stimulus the brain actually sees.</li>
+<li>Variable refresh (120 Hz panels dropping to 60 Hz in low-power mode) silently doubling your durations.</li>
+<li>Auto-brightness, True Tone, Night Shift or dark-mode tone mapping changing luminance between sessions.</li>
+<li>Using the training task as the outcome measure; it will always look like progress.</li>
+<li>Overtraining in one sitting. Published sessions were 12–30 minutes; Oryx caps at about 10.</li>
+</ul>
+
+<h2 id="legal">IP and regulation</h2>
+<p>None of this restricts building and using a trainer for yourself. It matters if you share, sell or make health claims. This is orientation, not legal advice.</p>
+<ul>
+<li><strong>Patents.</strong> The original Polat and Ucansi family dates from about 1999–2005 (for example WO 2001/047463 on improving visual perception and US 8,403,485 on vision evaluation; related patents include US 6,876,758 and US 7,427,138). With 20-year terms, the early ones have probably lapsed, but GlassesOff or Oryx may hold newer filings, and the University of California holds US 10,149,795 (granted 2018) on Andersen’s contrast-training method. Commercial use needs a freedom-to-operate search.</li>
+<li><strong>Medical device law.</strong> In the EU, software whose intended purpose is to treat or alleviate a condition such as presbyopia is likely a medical device under the MDR and needs CE marking; in Germany the DiGA route exists for reimbursed digital therapeutics. Calling it “wellness” does not help if the claims are medical.</li>
+<li><strong>Advertising claims.</strong> The UltimEyes case shows US enforcement; in Germany the Heilmittelwerbegesetz restricts health advertising. Claims need competent, disclosed evidence.</li>
+</ul>
+
+<h2 id="sources">Sources</h2>
+<ol class="refs">
+<li>Tim Ferriss Show #887 (20 Oct 2026), episode write-up with timestamps: <a href="https://www.thefabulous.co/pod/tim-ferriss/4-hour-workweek-meets-ai-tim-ferriss-q-a/">Pod by Fabulous</a></li>
+<li>Oryx Neuro: <a href="https://www.oryxneuro.com/">home and FAQ</a>, <a href="https://www.oryxneuro.com/optometrist/">optometrist page</a>, <a href="https://www.oryxneuro.com/about/">about</a>, <a href="https://www.oryxneuro.com/terms-of-use/">terms of use</a></li>
+<li>Oryx app listing and version history: <a href="https://apps.apple.com/ca/app/oryx-better-vision-up-close/id6759708847">App Store</a></li>
+<li>Brand case study: <a href="https://www.tommyandyou.com/oryx-neuro/">Tommy &amp; You, Oryx Neuro</a></li>
+<li>Polat U. et al. (2012) Training the brain to overcome the effect of aging on the human eye. <a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC3284862">Sci Rep 2:278</a></li>
+<li>Yehezkel O. et al. (2016) Gains following perceptual learning are closely linked to the initial visual acuity. <a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC4848560">Sci Rep 6:25188</a></li>
+<li>Lev M. et al. (2014) Training improves visual processing speed and generalizes to untrained functions. <a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC4246693">Sci Rep 4:7251</a></li>
+<li>Sterkin A. et al. Vision improvement in pilots with presbyopia following perceptual learning. <a href="https://cris.biu.ac.il/en/publications/vision-improvement-in-pilots-with-presbyopia-following-perceptual-4/">Vision Research</a></li>
+<li>Durrie D., McMinn P. (2007) Computer-based primary visual cortex training for low myopia and early presbyopia. <a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC2258094/">Trans Am Ophthalmol Soc</a></li>
+<li>Collinear facilitation range and V1 basis: <a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC5155702">Sci Rep 2015</a>; <a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC3044877">J Neurosci, suppressive lateral interactions</a>; <a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC4059505">development in macaques</a>; <a href="https://researchers.westernsydney.edu.au/en/publications/the-mechanisms-of-collinear-integration/">mechanisms of collinear integration</a></li>
+<li>Perceptual learning reviews: <a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC3021105">Lu et al., Visual perceptual learning</a>; <a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC3811035">Recent progress in perceptual learning research</a></li>
+<li>DeLoss D., Watanabe T., Andersen G. (2015) Improving vision among older adults. <a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC4441618">Psychol Sci</a></li>
+<li>UNIST: <a href="https://scholarworks.unist.ac.kr/handle/201301/56879">alternating- vs fixed-distance presbyopia training</a>; <a href="https://scholarworks.unist.ac.kr/handle/201301/90891">thesis incl. smartphone home training</a></li>
+<li>Read Without Glasses evaluation (Hopkins et al. 2012): <a href="https://ecoo.info/2012/09/vision-exercises-do-not-help-presbyopic-patients-press-release/">ECOO summary</a></li>
+<li>Vision therapy for presbyopia, systematic review: <a href="https://journals.sbmu.ac.ir/basir/article/download/50685/36172/261384">Abdollahi et al.</a></li>
+<li>FTC and UltimEyes: <a href="https://www.ftc.gov/node/44710">FTC release</a>; <a href="https://www.mobihealthnews.com/news/ftc-approves-final-order-fine-vision-improvement-app-maker">final order coverage</a>; <a href="https://www.kelleydrye.com/viewpoints/blogs/ad-law-access/the-carrot-and-the-stick-ftcs-letter-evidences-flexible-yet-firm-approach-to-claim-substantiation">substantiation debate</a></li>
+<li>GlassesOff history: <a href="https://www.cbinsights.com/investor/glassesoff">CB Insights</a>; <a href="https://www.foxnews.com/tech/smartphone-app-can-delay-need-for-reading-glasses-scientists-claim.amp">2013 launch coverage</a></li>
+<li>Patents: <a href="https://patents.google.com/patent/WO2001047463A1/en">WO2001047463A1</a>; <a href="https://techtransfer.universityofcalifornia.edu/NCD/25271.html">UC, US 10,149,795</a></li>
+<li>Display and timing methods: <a href="https://peerj.com/articles/9414">Bridges et al. 2020 timing mega-study</a>; <a href="https://opticalengineering.spiedigitallibrary.org/conference-proceedings-of-spie/1666/0000/Bit-stealing--how-to-get-1786-or-more-gray/10.1117/12.135981.full">Tyler et al. 1992 bit-stealing</a>; <a href="https://link.springer.com/article/10.3758/BRM.40.3.735">noisy-bit method</a>; <a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC6976612">virtual chinrest</a></li>
+<li>Adjacent approaches: <a href="https://www.ncbi.nlm.nih.gov/pmc/articles/PMC11184131/">neurofeedback before Gabor training</a>; <a href="https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4212604/">perceptual learning plus tRNS in myopia</a></li>
+</ol>
+
+</div>
+</main>
+
+<footer>
+<p>Not medical advice. Have an eye examination before relying on unaided near vision, and before starting any vision-training program.</p>
+</footer>
+
+<script>
+(function () {
+  "use strict";
+  var reduceMotion = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  document.querySelectorAll("a[data-jump]").forEach(function (a) {
+    a.addEventListener("click", function (e) {
+      var el = document.getElementById(a.getAttribute("href").slice(1));
+      if (el) { e.preventDefault(); el.scrollIntoView({ behavior: reduceMotion ? "auto" : "smooth", block: "start" }); }
+    });
+  });
+
+  var $ = function (id) { return document.getElementById(id); };
+  var cv = $("stim");
+  if (!cv || !cv.getContext) return;
+  var ctx = cv.getContext("2d", { alpha: false });
+  var cond = $("cond"), ori = $("ori"), sep = $("sep"), sepOut = $("sepOut"), tc = $("tc"), tcOut = $("tcOut");
+  var dur = $("dur"), bm = $("bm"), isi = $("isi");
+  var btnStart = $("start"), r1 = $("r1"), r2 = $("r2"), btnReset = $("reset"), status = $("status"), box = $("demoBox");
+
+  var MEAN = 0.214;          // linear luminance, encodes to sRGB code ~127.5
+  var FLANK_C = 0.6;         // flanker contrast, as in the 2016 protocol
+  var LAMBDA_CSS = 12;       // CSS pixels per cycle (uncalibrated)
+  var W = 1, H = 1, dpr = 1, hz = 60, frameMs = 1000 / 60;
+  var busy = false, awaiting = false, targetInterval = 1, demoActive = false;
+
+  function srgb(L) { return L <= 0.0031308 ? 12.92 * L : 1.055 * Math.pow(L, 1 / 2.4) - 0.055; }
+  var meanCode = srgb(MEAN) * 255;
+
+  // ---------- staircase: 2-down / 1-up on log10 contrast ----------
+  var st;
+  function stReset(c) {
+    st = { logc: Math.log10(c), step: 0.1, lo: Math.log10(0.003), hi: Math.log10(0.8),
+           streak: 0, last: 0, rev: [], n: 0, nCorrect: 0 };
+  }
+  function stUpdate(ok) {
+    st.n++; if (ok) st.nCorrect++;
+    var dir;
+    if (ok) { st.streak++; if (st.streak < 2) return; st.streak = 0; dir = -1; }
+    else { st.streak = 0; dir = 1; }
+    if (st.last && dir !== st.last) st.rev.push(st.logc);
+    st.last = dir;
+    st.logc = Math.min(st.hi, Math.max(st.lo, st.logc + dir * st.step));
+  }
+  function stThreshold() {
+    var r = st.rev.slice(-8); if (r.length < 4) return null;
+    var s = 0; r.forEach(function (v) { s += v; }); return Math.pow(10, s / r.length);
+  }
+  function contrastNow() { return Math.pow(10, st.logc); }
+  stReset(+tc.value / 100);
+
+  // ---------- geometry ----------
+  function resize() {
+    dpr = Math.min(window.devicePixelRatio || 1, 3);
+    var r = cv.getBoundingClientRect();
+    W = Math.max(1, Math.round(r.width * dpr)); H = Math.max(1, Math.round(r.height * dpr));
+    cv.width = W; cv.height = H;
+  }
+  function axes() {
+    var th = (+ori.value) * Math.PI / 180;            // bar orientation, 0 = vertical
+    return { bx: Math.sin(th), by: -Math.cos(th),       // along the bars (collinear axis)
+             cx: Math.cos(th), cy: Math.sin(th) };      // across the bars (carrier)
+  }
+  function flankers(list, ax, d, ring) {
+    var x0 = W / 2, y0 = H / 2;
+    if (ring) {
+      for (var i = -1; i <= 1; i++) {        // 3 x 3 grid around the target, aligned with the bars
+        for (var j = -1; j <= 1; j++) {
+          if (!i && !j) continue;
+          list.push({ x: x0 + (i * ax.bx + j * ax.cx) * d, y: y0 + (i * ax.by + j * ax.cy) * d, c: FLANK_C });
+        }
+      }
+    } else {
+      list.push({ x: x0 + ax.bx * d, y: y0 + ax.by * d, c: FLANK_C }, { x: x0 - ax.bx * d, y: y0 - ax.by * d, c: FLANK_C });
+    }
+  }
+  // kind: "present" | "absent" | "mask" | "blank"
+  function spec(kind, targetC) {
+    var ax = axes(), lam = LAMBDA_CSS * dpr, d = (+sep.value) * lam, list = [];
+    var hasFlank = cond.value !== "single", ring = cond.value === "crowd";
+    if (kind === "present") list.push({ x: W / 2, y: H / 2, c: targetC });
+    if ((kind === "present" || kind === "absent") && hasFlank) flankers(list, ax, d, ring);
+    if (kind === "mask") flankers(list, ax, d, ring);
+    return { list: list, lam: lam, sigma: lam, ax: ax };
+  }
+
+  // ---------- renderer: linear-light sum, sRGB encode, noisy-bit dither ----------
+  function render(s) {
+    var sum = new Float32Array(W * H), R = Math.ceil(3.2 * s.sigma), R2 = R * R;
+    var twoS2 = 2 * s.sigma * s.sigma, k = 2 * Math.PI / s.lam;
+    s.list.forEach(function (p) {
+      var x0 = Math.max(0, Math.floor(p.x - R)), x1 = Math.min(W - 1, Math.ceil(p.x + R));
+      var y0 = Math.max(0, Math.floor(p.y - R)), y1 = Math.min(H - 1, Math.ceil(p.y + R));
+      for (var y = y0; y <= y1; y++) {
+        var dy = y + 0.5 - p.y;
+        for (var x = x0; x <= x1; x++) {
+          var dx = x + 0.5 - p.x, r2 = dx * dx + dy * dy;
+          if (r2 > R2) continue;
+          sum[y * W + x] += p.c * Math.exp(-r2 / twoS2) * Math.cos(k * (dx * s.ax.cx + dy * s.ax.cy));
+        }
+      }
+    });
+    var img = ctx.createImageData(W, H), px = img.data;
+    for (var i = 0, j = 0; i < sum.length; i++, j += 4) {
+      var v = sum[i], code;
+      if (v === 0) code = meanCode;
+      else code = srgb(Math.min(1, Math.max(0, MEAN * (1 + v)))) * 255;
+      code = Math.floor(code + Math.random());            // stochastic rounding
+      if (code > 255) code = 255;
+      px[j] = px[j + 1] = px[j + 2] = code; px[j + 3] = 255;
+    }
+    return img;
+  }
+  function drawFix() {
+    ctx.strokeStyle = "#1f1f1f"; ctx.lineWidth = 1.5 * dpr;
+    ctx.beginPath(); ctx.arc(W / 2, H / 2, 7 * dpr, 0, 2 * Math.PI); ctx.stroke();
+  }
+  function preview() {
+    if (busy || awaiting) return;
+    ctx.putImageData(render(spec("present", +tc.value / 100)), 0, 0);
+  }
+
+  // ---------- frame timing ----------
+  var DUR_MS = [34, 68, 116], ISI_MS = [68, 83, 116, 150];
+  function nFrames(ms) { return Math.max(1, Math.round(ms / frameMs)); }
+  function fillTiming() {
+    var dSel = dur.value ? +dur.selectedIndex : 1, iSel = isi.value ? +isi.selectedIndex : 1;
+    dur.innerHTML = ""; isi.innerHTML = "";
+    DUR_MS.forEach(function (ms) {
+      var n = nFrames(ms), o = document.createElement("option");
+      o.value = n; o.textContent = n + " frames ≈ " + Math.round(n * frameMs) + " ms"; dur.appendChild(o);
+    });
+    ISI_MS.forEach(function (ms) {
+      var n = nFrames(ms), o = document.createElement("option");
+      o.value = n; o.textContent = n + " frames ≈ " + Math.round(n * frameMs) + " ms"; isi.appendChild(o);
+    });
+    dur.selectedIndex = dSel; isi.selectedIndex = iSel;
+  }
+  function measureHz(cb) {
+    var t = [];
+    function f(ts) {
+      t.push(ts);
+      if (t.length < 61) { requestAnimationFrame(f); return; }
+      var d = []; for (var i = 1; i < t.length; i++) d.push(t[i] - t[i - 1]);
+      d.sort(function (a, b) { return a - b; });
+      var raw = 1000 / d[d.length >> 1], common = [24, 30, 48, 50, 60, 72, 75, 90, 100, 120, 144, 165, 240], best = 60;
+      common.forEach(function (c) { if (Math.abs(c - raw) < Math.abs(best - raw)) best = c; });
+      cb(best, raw);
+    }
+    requestAnimationFrame(f);
+  }
+  function play(seq, done) {
+    var i = 0, last = null, deltas = [];
+    function step(ts) {
+      if (last !== null) deltas.push(ts - last);
+      last = ts;
+      if (i < seq.length) {
+        var fr = seq[i++];
+        ctx.putImageData(fr.img, 0, 0);
+        if (fr.fix) drawFix();
+        requestAnimationFrame(step);
+      } else {
+        done(deltas.filter(function (dt) { return dt > 1.5 * frameMs; }).length);
+      }
+    }
+    requestAnimationFrame(step);
+  }
+
+  // ---------- trial ----------
+  function pct(c) { return (c * 100).toFixed(c < 0.1 ? 1 : 0) + " %"; }
+  function setStatus(html) { status.innerHTML = html; }
+  function runTrial() {
+    if (busy || awaiting) return;
+    busy = true; btnStart.disabled = true;
+    var c = contrastNow();
+    tc.value = Math.max(+tc.min, Math.min(+tc.max, c * 100)).toFixed(1); tcOut.textContent = pct(c);
+    setStatus("Preparing frames…");
+    setTimeout(function () {
+      targetInterval = Math.random() < 0.5 ? 1 : 2;
+      var imgs = { blank: render(spec("blank")), present: render(spec("present", c)),
+                   absent: render(spec("absent")), mask: render(spec("mask")) };
+      var D = +dur.value, I = +isi.value, seq = [];
+      var push = function (img, n, fix) { for (var k = 0; k < n; k++) seq.push({ img: img, fix: !!fix }); };
+      push(imgs.blank, nFrames(200), true);
+      push(imgs.blank, nFrames(300) + Math.round(Math.random() * nFrames(250)));
+      [1, 2].forEach(function (iv) {
+        push(iv === targetInterval ? imgs.present : imgs.absent, D);
+        if (bm.checked) { push(imgs.blank, I); push(imgs.mask, D); }
+        if (iv === 1) push(imgs.blank, nFrames(500));
+      });
+      push(imgs.blank, 1, true);
+      setStatus("Watch the centre…");
+      play(seq, function (dropped) {
+        busy = false; awaiting = true; r1.disabled = r2.disabled = false;
+        lastDropped = dropped;
+        setStatus("Which interval contained the faint centre patch? " +
+          (dropped ? "<span class=\"bad\">" + dropped + " frame" + (dropped > 1 ? "s" : "") + " ran long on this trial, so its timing was not exact.</span>" : "No dropped frames."));
+      });
+    }, 20);
+  }
+  var lastDropped = 0;
+  function respond(k) {
+    if (!awaiting) return;
+    awaiting = false; r1.disabled = r2.disabled = true; btnStart.disabled = false;
+    var ok = k === targetInterval;
+    stUpdate(ok);
+    var th = stThreshold(), c = contrastNow();
+    tc.value = Math.max(+tc.min, Math.min(+tc.max, c * 100)).toFixed(1); tcOut.textContent = pct(c);
+    setStatus((ok ? "<span class=\"good\">Correct.</span> " : "<span class=\"bad\">Not this time: it was interval " + targetInterval + ".</span> ") +
+      "Trial " + st.n + ", " + st.nCorrect + " correct. Next contrast " + pct(c) + ". " +
+      (th ? "Threshold estimate ≈ " + pct(th) + " from the last " + Math.min(8, st.rev.length) + " reversals." :
+            "Threshold estimate appears after 4 reversals (" + st.rev.length + " so far)."));
+    preview();
+  }
+
+  // ---------- wiring ----------
+  function syncOutputs() { sepOut.textContent = (+sep.value).toString() + " λ"; tcOut.textContent = pct(+tc.value / 100); }
+  var pending = null;
+  function schedulePreview() { if (pending) cancelAnimationFrame(pending); pending = requestAnimationFrame(function () { pending = null; preview(); }); }
+  [cond, ori, sep].forEach(function (el) { el.addEventListener("input", function () { syncOutputs(); schedulePreview(); }); });
+  tc.addEventListener("input", function () { syncOutputs(); stReset(+tc.value / 100); schedulePreview(); });
+  btnStart.addEventListener("click", runTrial);
+  r1.addEventListener("click", function () { respond(1); });
+  r2.addEventListener("click", function () { respond(2); });
+  btnReset.addEventListener("click", function () {
+    if (busy) return; awaiting = false; r1.disabled = r2.disabled = true; btnStart.disabled = false;
+    stReset(+tc.value / 100); setStatus("Staircase reset. Starting contrast " + pct(+tc.value / 100) + "."); preview();
+  });
+  box.addEventListener("pointerdown", function () { demoActive = true; });
+  box.addEventListener("focusin", function () { demoActive = true; });
+  document.addEventListener("pointerdown", function (e) { if (!box.contains(e.target)) demoActive = false; });
+  document.addEventListener("keydown", function (e) {
+    if (!demoActive) return;
+    var tag = (e.target && e.target.tagName) || "";
+    if (e.key === "1" || e.key === "2") { if (awaiting) { e.preventDefault(); respond(+e.key); } }
+    else if (e.key === " " && tag !== "SELECT" && tag !== "INPUT" && tag !== "BUTTON") {
+      e.preventDefault(); if (!awaiting) runTrial();
+    }
+  });
+  var rt = null;
+  window.addEventListener("resize", function () {
+    clearTimeout(rt); rt = setTimeout(function () { if (!busy) { resize(); preview(); } }, 150);
+  });
+
+  resize(); syncOutputs(); fillTiming(); preview();
+  measureHz(function (best, raw) {
+    hz = best; frameMs = 1000 / hz; fillTiming();
+    setStatus("Display refresh ≈ " + hz + " Hz (measured " + raw.toFixed(1) + " Hz), so one frame ≈ " + frameMs.toFixed(1) +
+      " ms. Durations are rounded to whole frames. Press “Run a trial” to start.");
+  });
+})();
+</script>
+</body>
+</html>

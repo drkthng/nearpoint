@@ -1,0 +1,21 @@
+{
+  "name": "near-vision-trainer",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "description": "Personal research instrument: perceptual-learning trainer for near vision (Gabor lateral masking, crowding, backward masking).",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc --noEmit && vite build",
+    "preview": "vite preview",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.5",
+    "typescript": "^7.0.2",
+    "vite": "^8.3.5",
+    "vitest": "^5.0.5"
+  }
+}

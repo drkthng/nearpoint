@@ -1,0 +1,22 @@
+{
+  "version": 1,
+  "distance_cm": 40,
+  "staircase": { "start": 0.2, "step": 0.1, "down": 2, "floor": 0.003 },
+  "session_template": [
+    { "condition": "SINGLE", "cpd": 4, "theta_deg": 0, "dur_ms": 68, "trials": 40 },
+    { "condition": "LM", "cpd": 4, "theta_deg": 0, "dur_ms": 68, "trials": 50,
+      "flank_contrast": 0.6, "sep_lambda": [2, 3, 4] },
+    { "condition": "BM-LM", "cpd": 4, "theta_deg": 0, "dur_ms": 68, "trials": 50,
+      "flank_contrast": 0.6, "sep_lambda": [3], "isi_ms": [83, 116] },
+    { "condition": "CROWD", "cpd": 4, "theta_deg": 0, "dur_ms": 68, "trials": 50,
+      "flank_contrast": 0.6, "sep_lambda": [3], "n_flankers": 8 }
+  ],
+  "progression": {
+    "change_one_param_per_session": true,
+    "rotate_orientation_every_n_sessions": 2,
+    "raise_cpd_when_threshold_below": 0.05,
+    "stop_when_plateau_sessions": 4,
+    "min_sessions": 25,
+    "max_sessions": 65
+  }
+}

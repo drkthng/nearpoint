@@ -1,0 +1,20 @@
+name: CI
+on:
+  push:
+  pull_request:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm test
+      - run: npm run build
+  # Session S8 adds an e2e job here: Playwright + headless Chromium, frame-log assertions,
+  # and a GPU-vs-CPU renderer pixel comparison. Kept in CI because the cloud sandbox may not
+  # be allowed to download browser binaries.
