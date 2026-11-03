@@ -116,10 +116,10 @@ export async function card(
   opts: { auto?: boolean; background?: string } = {},
 ): Promise<void> {
   const btn = h("button", { class: "primary" }, label);
-  const el = h("div", {}, ...children.map((c) => (typeof c === "string" ? h("p", {}, c) : c)), btn);
+  const el = h("div", { class: "overlay-card" }, ...children.map((c) => (typeof c === "string" ? h("p", {}, c) : c)), btn);
   css(el, {
     position: "fixed", inset: "0", zIndex: "50", background: opts.background ?? "#fff", color: "#111", display: "flex",
-    flexDirection: "column", alignItems: "center", justifyContent: "center", gap: "0.5rem", padding: "1rem",
+    flexDirection: "column", alignItems: "center", justifyContent: "safe center", gap: "0.5rem", padding: "1rem",
     textAlign: "center", overflow: "auto",
   });
   root.append(el);

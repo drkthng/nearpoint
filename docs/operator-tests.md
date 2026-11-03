@@ -40,7 +40,8 @@ Pages" → Run workflow. Only works for a private repository on a paid GitHub pl
 
 Expected:
 - A grey icon with a striped patch appears on the home screen.
-- Opening it: no address bar, no status bar (fullscreen), landscape.
+- Opening it: no address bar, landscape; Android's status/navigation bars stay visible on the menus
+  (sessions and tests switch to fullscreen). **Close app** on the start screen closes it, or shows how.
 - Start screen shows "Storage: granted" or "persisted" (if it says "denied", tell me; data could then
   be evicted under storage pressure, so backups matter more).
 
@@ -68,12 +69,31 @@ Expected:
 
 ## D. Smoke test of training (10 min) — in Chrome, not the installed app
 
-Quick runs need the address bar, so use a normal Chrome tab on the **same URL**. It shares the data
-with the installed app. Quick runs are saved as test runs and never count as training.
+Quick runs need the address bar, so use a normal Chrome tab on the **same URL** (it shares the data
+with the installed app). Quick runs are saved as test runs and never count as training. The same
+explanation is in the app: training screen → "How a trial works", and a hint on every block card.
 
-1. Open `https://<your-site>/#train?quick=1&trials=6` → **Start**.
-2. Hold the phone at 40 cm in landscape. In each trial, a small ring flashes, then two short intervals.
-   Tap the **left half** if the striped patch was in the first interval, the **right half** if in the second.
+**What you do in one trial (about 2 s):**
+1. Phone in the stand at 40 cm, landscape, at eye height. Look at the **centre of the screen** for the
+   whole block; do not follow anything with your eyes.
+2. **Ring = get ready**: a small dark ring flashes in the centre (0.2 s). Keep looking at that spot.
+3. **Two very short flashes**, half a second apart (each about 1/15 s). A faint striped patch appears
+   in the centre in **exactly one** of them.
+   - Block 1 "Single target": the other flash shows nothing → "patch, then nothing" or "nothing, then patch".
+   - Blocks 2–4: bright helper patches (2 or 8) around the centre appear in **both** flashes. Ignore
+     them; only the faint centre patch counts. They also show you when the flashes happen.
+4. **Answer**: a faint "1" (left half) and "2" (right half) appear with the prompt "Which flash had the
+   centre patch?". Tap **left** = patch was in the **first** flash, **right** = in the **second**.
+5. **Feedback**: high beep + green ring = correct, low buzz + red ring = wrong. The next trial starts
+   by itself.
+6. It adapts: two correct → fainter, one wrong → stronger. Soon you are unsure about a third of the
+   time; that is intended. **Always guess.**
+7. Between blocks a card shows the threshold and valid/invalid counts → **Next block**.
+
+**Steps:**
+1. Open `https://<your-site>/#train?quick=1&trials=6` → read "How a trial works" → **Start**.
+2. On each block card read the hint → **Tap to start** → do 6 trials. 4 blocks, about 3 min in total.
+   (In the normal training screen the button **Practice first (short, not counted)** does the same.)
 
 Expected:
 - The page goes fullscreen with a uniform mid-grey background. There is no visible noise, no banding and

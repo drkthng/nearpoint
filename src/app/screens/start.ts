@@ -2,6 +2,7 @@ import { nextSession } from "../../core/curriculum";
 import type { AppContext } from "../context";
 import { clear, h } from "../dom";
 import { daysBetween } from "../routes";
+import { closeApp } from "../close";
 
 export const DISCLAIMER =
   "nearpoint is a personal research tool, not a medical device. It does not diagnose, treat or prevent any condition. Have your eyes examined by an eye-care professional, and see one promptly if your vision changes.";
@@ -38,6 +39,7 @@ export async function renderStart(ctx: AppContext, root: HTMLElement): Promise<v
   const canTrain = !!cal && !next.stop;
   const hint = !cal ? "Calibrate first." : next.stop ? "The program is complete." : "";
 
+  const closeHint = h("p", { class: "small", role: "status" });
   clear(root);
   root.append(
     h("h1", {}, "nearpoint"),
@@ -53,7 +55,9 @@ export async function renderStart(ctx: AppContext, root: HTMLElement): Promise<v
       h("button", { onclick: () => ctx.navigate("tests") }, "Outcome tests"),
       h("button", { onclick: () => ctx.navigate("history") }, "History"),
       h("button", { onclick: () => ctx.navigate("data") }, "Data"),
+      h("button", { onclick: () => closeApp((t) => { closeHint.textContent = t; }) }, "Close app"),
     ),
+    closeHint,
     ...(hint ? [h("p", { class: "small" }, hint)] : []),
     h("p", { class: "small" }, `Storage: ${ctx.persistence}`),
   );

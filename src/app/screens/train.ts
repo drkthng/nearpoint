@@ -19,6 +19,7 @@ import { clear, h } from "../dom";
 import { measureRefreshNow, waitFrames } from "../frames";
 import { playFrames } from "../player";
 import { keepScreenOn } from "../wake-lock";
+import { BLOCK_HINT, RESPONSE_PROMPT, trialInstructions } from "../instructions";
 
 const CONDITION_WORDS: Record<Condition, string> = {
   SINGLE: "Single target",
@@ -148,7 +149,14 @@ async function runTrain(
       h("ol", {}, ...blocks.map((b) => h("li", {}, `${CONDITION_WORDS[b.condition]}, ${b.trials} trials`))),
     ),
     h("p", {}, "Phone in the stand at 40 cm, brightness at maximum, dim room."),
-    h("div", { class: "row" }, startBtn, h("button", { onclick: () => ctx.navigate("start") }, "Back")),
+    // Open by default for the first sessions; always available.
+    h("details", { class: "card", open: history.length < 3 },
+      h("summary", {}, "How a trial works (read before your first session)"),
+      trialInstructions()),
+    h("div", { class: "row" },
+      startBtn,
+      ...(quick ? [] : [h("button", { onclick: () => ctx.navigate("train", "quick=1&trials=6") }, "Practice first (short, not counted)")]),
+      h("button", { onclick: () => ctx.navigate("start") }, "Back")),
   );
   const clicked = new Promise<void>((res) => startBtn.addEventListener("click", () => res(), { once: true }));
   if (auto) startBtn.click();
@@ -264,7 +272,9 @@ async function runTrain(
     });
     return b;
   };
-  const responseUi = addOverlay(h("div", {}, respBtn("1", "left", 1), respBtn("2", "right", 2)));
+  const prompt = h("div", {}, RESPONSE_PROMPT);
+  style(prompt, { position: "fixed", left: "0", right: "0", top: "12%", textAlign: "center", zIndex: "25", font: "20px system-ui, sans-serif", color: "rgba(0,0,0,0.6)", pointerEvents: "none" });
+  const responseUi = addOverlay(h("div", {}, respBtn("1", "left", 1), respBtn("2", "right", 2), prompt));
   responseUi.style.display = "none";
   const counter = addOverlay(h("div", {}));
   style(counter, { position: "fixed", left: "8px", bottom: "8px", zIndex: "30", font: "24px system-ui, sans-serif", color: "rgba(0,0,0,0.75)", pointerEvents: "none" });
@@ -377,10 +387,10 @@ async function runTrain(
 
     const card = (...children: (Node | string)[]): { el: HTMLElement; btn: HTMLButtonElement } => {
       const btn = h("button", { class: "primary" }, "");
-      const el = h("div", {}, ...children.map((c) => (typeof c === "string" ? h("p", {}, c) : c)));
+      const el = h("div", { class: "overlay-card" }, ...children.map((c) => (typeof c === "string" ? h("p", {}, c) : c)));
       style(el, {
         position: "fixed", inset: "0", zIndex: "50", background: OVERLAY_BG, color: "#111", display: "flex", flexDirection: "column",
-        alignItems: "center", justifyContent: "center", gap: "0.5rem", padding: "1rem", textAlign: "center", overflow: "auto",
+        alignItems: "center", justifyContent: "safe center", gap: "0.5rem", padding: "1rem", textAlign: "center", overflow: "auto",
       });
       el.append(btn, h("button", { class: "stop-session", onclick: confirmStop }, "Stop session"));
       return { el, btn };
@@ -409,7 +419,8 @@ async function runTrain(
         h("h2", {}, `Block ${i + 1} of ${blocks.length}`),
         CONDITION_WORDS[block.condition],
         `${block.trials} trials`,
-        "Answer by tapping the left (1) or right (2) half of the screen.",
+        BLOCK_HINT[block.condition],
+        "Look at the centre. Left half = patch in the FIRST flash, right half = SECOND flash. Always guess.",
         ...notes,
       );
       const blockRow: BlockRow = {

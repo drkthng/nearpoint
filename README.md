@@ -29,7 +29,8 @@ phone (IndexedDB). Installing, offline use, fullscreen and the screen wake lock 
 
 1. Open the app's HTTPS address in **Chrome** (not Samsung Internet).
 2. Chrome menu (⋮) → **Add to home screen** → **Install**. Open nearpoint from the home-screen icon;
-   it starts fullscreen in landscape.
+   it opens in landscape without the address bar; sessions and tests switch to fullscreen. **Close app**
+   on the start screen closes it (or explains how, if the phone does not allow it).
 3. Phone settings for every session: Display → Motion smoothness **Standard** (60 Hz); Screen mode
    **Natural**; Adaptive brightness **off**; Eye comfort shield **off**; brightness at maximum. Keep
    battery saver off (it can lower the refresh rate).
