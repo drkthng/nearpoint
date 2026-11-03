@@ -17,7 +17,6 @@ import { playFrames } from "../player";
 import {
   Stopped,
   TestRun,
-  abortWhenHidden,
   card,
   css,
   enterTestDisplay,
@@ -71,25 +70,50 @@ export async function renderContrast(ctx: AppContext, root: HTMLElement, query: 
     if (auto) startBtn.click();
     await run.race(clicked);
     enterTestDisplay(run);
-    abortWhenHidden(run);
     clear(root);
 
     const canvas = document.createElement("canvas");
     overlay(run, root, canvas, { inset: "0", width: "100vw", height: "100vh", display: "block", background: BG });
     let cw = canvas.width;
     let ch = canvas.height;
+    // A resize/rotation or hidden page invalidates the trial in progress, also while waiting for the answer.
+    let cancelResponse: (() => void) | null = null;
+    let redraw: () => void = () => undefined;
+    const disturb = (): void => {
+      for (const c of run.abort) c.abort();
+      cancelResponse?.();
+    };
     run.onCleanup(
       fitCanvasToDevicePixels(canvas, (w, hh) => {
         cw = w;
         ch = hh;
-        for (const c of run.abort) c.abort();
+        disturb();
+        redraw(); // resizing clears the canvas
       }),
     );
+    const onVis = (): void => {
+      if (document.visibilityState === "hidden") disturb();
+      else redraw();
+    };
+    document.addEventListener("visibilitychange", onVis);
+    run.onCleanup(() => document.removeEventListener("visibilitychange", onVis));
     cw = canvas.width;
     ch = canvas.height;
-    const gl = WebGLStimulusRenderer.create(canvas);
-    if (!gl) throw new Error("WebGL2 is required for this test");
+    const created = WebGLStimulusRenderer.create(canvas);
+    if (!created) throw new Error("WebGL2 is required for this test");
+    let gl: WebGLStimulusRenderer = created;
     run.onCleanup(() => gl.dispose());
+    canvas.addEventListener("webglcontextlost", (ev) => {
+      ev.preventDefault();
+      disturb();
+    });
+    canvas.addEventListener("webglcontextrestored", () => {
+      const r = WebGLStimulusRenderer.create(canvas);
+      if (r) {
+        gl = r;
+        redraw();
+      } else run.stop("graphics could not be restored");
+    });
 
     // response UI
     let accept: ((r: 1 | 2) => void) | null = null;
@@ -140,6 +164,7 @@ export async function renderContrast(ctx: AppContext, root: HTMLElement, query: 
       const lam = lambdaPx(cpd, distanceMm, cal.pxPerMm);
       const blank = (): void => gl.draw({ patches: [], lambdaPx: lam, sigmaPx: lam, carrierRad: carrier, mean: DEFAULT_MEAN_LUMINANCE, seed: nextSeed() });
       blank();
+      redraw = blank;
       await card(run, root, "Tap to start", [h("h2", {}, `Run ${i + 1} of ${CONTRAST_TEST_CPD.length}: ${cpd} cycles/degree`), "Look at the centre of the screen.", ...notes], { auto, background: BG });
       const st = new ContrastTestRun(cpd, rand, maxTrials !== null ? { maxTrials, maxAttempts: Math.ceil(1.5 * maxTrials) } : {});
       const stored: StoredContrastTrial[] = [];
@@ -176,20 +201,34 @@ export async function renderContrast(ctx: AppContext, root: HTMLElement, query: 
           if (e instanceof Error && e.message === "playback aborted") {
             st.discard();
             blank();
-            await card(run, root, "Tap to continue", ["Paused — tap to continue"], { auto, background: BG });
+            await card(run, root, "Tap to continue", ["Paused — the last round was not counted. Tap to continue"], { auto, background: BG });
             continue;
           }
           throw e;
         } finally {
           run.abort.delete(ctl);
         }
-        const resp = new Promise<1 | 2>((res) => {
+        const resp = new Promise<1 | 2 | 0>((res) => {
           accept = res;
+          cancelResponse = () => {
+            if (accept) {
+              accept = null;
+              res(0);
+            }
+          };
         });
         if (auto) void waitFrames(1).then(() => respond(t.targetInterval));
-        const response = await run.race(resp);
+        const answer = await run.race(resp);
+        cancelResponse = null;
         const rtMs = performance.now() - t0;
         responseUi.style.display = "none";
+        if (answer === 0) {
+          st.discard();
+          blank();
+          await card(run, root, "Tap to continue", ["Paused — the last round was not counted. Tap to continue"], { auto, background: BG });
+          continue;
+        }
+        const response: 1 | 2 = answer;
         const valid = log.analysis.valid;
         const rec = st.record(response, valid);
         stored.push({ ...rec, rtMs, timing: toStoredTiming(log) });

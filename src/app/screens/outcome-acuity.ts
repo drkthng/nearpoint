@@ -157,10 +157,19 @@ async function runAcuity(
   const canvas = document.createElement("canvas");
   overlay(run, root, canvas, { inset: "0", width: "100vw", height: "100vh", display: "block", background: "#fff" });
   let resized = false;
+  // Resizing (rotation) clears the canvas: redraw what was on screen; a time-limited presentation in
+  // progress is aborted and repeated.
+  let redraw: () => void = () => undefined;
   const stopFit = fitCanvasToDevicePixels(canvas, () => {
     resized = true;
     for (const c of run.abort) c.abort();
+    redraw();
   });
+  const onVisible = (): void => {
+    if (document.visibilityState === "visible") redraw();
+  };
+  document.addEventListener("visibilitychange", onVisible);
+  run.onCleanup(() => document.removeEventListener("visibilitychange", onVisible));
   run.onCleanup(stopFit);
   const c2 = canvas.getContext("2d", { alpha: false });
   if (!c2) throw new Error("2D canvas is not available");
@@ -178,13 +187,18 @@ async function runAcuity(
   const proc = new AcuityProcedure(available, mulberry32(seed));
 
   const clearCanvas = (): void => {
+    redraw = paintWhite;
+    paintWhite();
+  };
+  const paintWhite = (): void => {
     g.fillStyle = "#fff";
     g.fillRect(0, 0, canvas.width, canvas.height);
   };
   const cy = (): number => Math.round(canvas.height * LETTER_AREA * 0.5);
   /** Draw letters (all, or only index k) of a line centred in the letter area. */
   const drawLine = (letters: readonly SloanLetter[], hPx: number, only: number | null): void => {
-    clearCanvas();
+    redraw = () => drawLine(letters, hPx, only);
+    paintWhite();
     const n = only === null ? letters.length : 1;
     const totalW = hPx * (2 * n - 1);
     const x0 = canvas.width / 2 - totalW / 2;
@@ -265,7 +279,11 @@ async function runAcuity(
         frames: timedFrames(hz as number),
         hz: hz as number,
         signal: ctl.signal,
-        drawFrame: (f) => (f.showTarget ? draw() : drawFixation()),
+        drawFrame: (f) => {
+          if (f.showTarget) draw();
+          else drawFixation();
+          redraw = paintWhite; // never re-show flashed letters after a resize
+        },
         drawEnd: clearCanvas,
       });
     } catch (e) {

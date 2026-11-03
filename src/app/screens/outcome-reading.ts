@@ -58,7 +58,14 @@ export async function renderReading(ctx: AppContext, root: HTMLElement, query: U
 
     const canvas = document.createElement("canvas");
     overlay(run, root, canvas, { inset: "0", width: "100vw", height: "100vh", display: "block", background: "#fff" });
-    run.onCleanup(fitCanvasToDevicePixels(canvas));
+    // Rotation (resize) or leaving the app while a sentence is shown: that sentence is not counted.
+    let cancelReading: (() => void) | null = null;
+    run.onCleanup(fitCanvasToDevicePixels(canvas, () => cancelReading?.()));
+    const onVis = (): void => {
+      if (document.visibilityState === "hidden") cancelReading?.();
+    };
+    document.addEventListener("visibilitychange", onVis);
+    run.onCleanup(() => document.removeEventListener("visibilitychange", onVis));
     const g = canvas.getContext("2d", { alpha: false });
     if (!g) throw new Error("2D canvas is not available");
     stopButton(run, root);
@@ -91,10 +98,17 @@ export async function renderReading(ctx: AppContext, root: HTMLElement, query: U
     clearCanvas();
 
     const trials: ReadingTrial[] = [];
+    let shown = 0; // sentences used so far (an interrupted one is replaced by a new sentence)
+    let interrupted = false;
     for (let i = 0; i < sizes.length; i++) {
       const L = sizes[i];
-      const sentence = SENTENCES[order[i % order.length]];
-      await card(run, root, "Show", [`Sentence ${i + 1}`, "Read aloud, then tap anywhere."], { auto });
+      const sentence = SENTENCES[order[shown++ % order.length]];
+      await card(run, root, "Show", [
+        ...(interrupted ? ["Paused — that sentence was not counted. Here is a new one of the same size."] : []),
+        `Sentence ${i + 1}`,
+        "Read aloud, then tap anywhere.",
+      ], { auto });
+      interrupted = false;
       const lay = layoutFor(L, sentence);
       // Draw in a rAF callback; its timestamp is the onset (visible at the next vsync, same as the tap's latency).
       const t0 = await run.race(
@@ -116,13 +130,20 @@ export async function renderReading(ctx: AppContext, root: HTMLElement, query: U
       const done = h("button", { "aria-label": "Done reading" });
       overlay(run, root, done, { inset: "0", zIndex: "40", background: "transparent", border: "none", minHeight: "0", borderRadius: "0" });
       const t1 = await run.race(
-        new Promise<number>((res) => {
+        new Promise<number | null>((res) => {
           done.addEventListener("click", (ev) => res(ev.timeStamp), { once: true });
+          cancelReading = () => res(null);
           if (auto) void waitFrames(30).then(() => done.click());
         }),
       );
+      cancelReading = null;
       done.remove();
       clearCanvas();
+      if (t1 === null) {
+        interrupted = true;
+        i--; // same size again, new sentence
+        continue;
+      }
       const ms = Math.max(1, t1 - t0);
 
       // Error entry

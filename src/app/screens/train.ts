@@ -189,10 +189,19 @@ async function runTrain(
   root.append(canvas);
   let cw = 0;
   let ch = 0;
+  // Any disturbance (resize/rotation, hidden page, lost graphics) invalidates the trial in progress,
+  // whether it is being shown or waiting for the answer; the trial is discarded and the session pauses.
+  let cancelResponse: (() => void) | null = null;
+  let redraw: () => void = () => undefined;
+  const disturb = (): void => {
+    controller?.abort();
+    cancelResponse?.();
+  };
   const stopFit = fitCanvasToDevicePixels(canvas, (w, hh) => {
     cw = w;
     ch = hh;
-    controller?.abort(); // a resize mid-trial invalidates it; the pause path discards the trial
+    disturb();
+    redraw(); // resizing clears the canvas to black
   });
   cw = canvas.width;
   ch = canvas.height;
@@ -238,7 +247,8 @@ async function runTrain(
     else if (ev.key === "2" || ev.key === "ArrowRight") respond(2);
   }
   function onVisibility(): void {
-    if (document.visibilityState === "hidden") controller?.abort();
+    if (document.visibilityState === "hidden") disturb();
+    else redraw();
   }
   document.addEventListener("visibilitychange", onVisibility);
   window.addEventListener("keydown", onKey);
@@ -340,14 +350,33 @@ async function runTrain(
   };
 
   try {
-    const gl = WebGLStimulusRenderer.create(canvas);
-    renderer = gl;
-    if (!gl) {
+    const created = WebGLStimulusRenderer.create(canvas);
+    renderer = created;
+    if (!created) {
       teardown();
       clear(root);
       root.append(h("p", {}, "WebGL2 is required for training on this device."), h("button", { onclick: () => ctx.navigate("start") }, "Back"));
       return;
     }
+    let gl: WebGLStimulusRenderer = created;
+    // Android may drop the GPU context while the app is in the background: rebuild it when restored.
+    const onLost = (ev: Event): void => {
+      ev.preventDefault();
+      disturb();
+    };
+    const onRestored = (): void => {
+      try {
+        const r = WebGLStimulusRenderer.create(canvas);
+        if (!r) throw new Error("WebGL2 unavailable");
+        gl = r;
+        renderer = r;
+        redraw();
+      } catch (e) {
+        stop(`graphics could not be restored: ${e instanceof Error ? e.message : String(e)}`);
+      }
+    };
+    canvas.addEventListener("webglcontextlost", onLost);
+    canvas.addEventListener("webglcontextrestored", onRestored);
 
     // refresh check
     const est = await race(measureRefreshNow());
@@ -385,6 +414,7 @@ async function runTrain(
     const drawBlank = (): void =>
       gl.draw({ patches: [], lambdaPx: lam, sigmaPx: sigma, carrierRad: carrier, mean: DEFAULT_MEAN_LUMINANCE, seed: nextDitherSeed() });
     drawBlank();
+    redraw = drawBlank;
 
     const card = (...children: (Node | string)[]): { el: HTMLElement; btn: HTMLButtonElement } => {
       const btn = h("button", { class: "primary" }, "");
@@ -489,7 +519,7 @@ async function runTrain(
           if (e instanceof Error && e.message === "playback aborted") {
             runner.discard();
             drawBlank();
-            await showCard("Tap to continue", "Paused — tap to continue");
+            await showCard("Tap to continue", "Paused — the last round was not counted. Tap to continue");
             audio.unlock();
             continue;
           }
@@ -497,13 +527,29 @@ async function runTrain(
         }
         controller = null;
 
-        const responded = new Promise<1 | 2>((res) => {
+        // 0 = the answer phase was disturbed (rotation, Home, lost graphics): discard and pause.
+        const responded = new Promise<1 | 2 | 0>((res) => {
           accept = res;
+          cancelResponse = () => {
+            if (accept) {
+              accept = null;
+              res(0);
+            }
+          };
         });
         if (auto) void waitFrames(1).then(() => respond(s.plan.targetInterval));
-        const response = await race(responded);
+        const answer = await race(responded);
+        cancelResponse = null;
         const rtMs = performance.now() - t0;
         responseUi.style.display = "none";
+        if (answer === 0) {
+          runner.discard();
+          drawBlank();
+          await showCard("Tap to continue", "Paused — the last round was not counted. Tap to continue");
+          audio.unlock();
+          continue;
+        }
+        const response: 1 | 2 = answer;
 
         const valid = log.analysis.valid;
         const outcome = runner.record({ response, timingValid: valid });

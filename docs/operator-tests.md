@@ -107,8 +107,8 @@ Expected:
 - End: "Session complete … Quick test run: not stored as a completed session."
 
 Also try these three things during the smoke test:
-- **Home button** mid-trial, then return → "Paused — tap to continue". That trial is not counted.
-- **Rotate to portrait** mid-block → "Turn the phone to landscape." Back to landscape → "Paused".
+- **Home button** mid-trial, then return → "Paused — the last round was not counted". Works during the patterns and while waiting for your answer.
+- **Rotate to portrait** mid-block → "Turn the phone to landscape." Back to landscape → "Paused — the last round was not counted" on a grey (not black) screen; tapping it continues, it is never counted as an answer.
 - **Stop** (top right) → confirm → back to the start screen. History → "Aborted and test sessions"
   lists the run.
 
