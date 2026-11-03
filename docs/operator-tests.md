@@ -73,22 +73,18 @@ Quick runs need the address bar, so use a normal Chrome tab on the **same URL** 
 with the installed app). Quick runs are saved as test runs and never count as training. The same
 explanation is in the app: training screen → "How a trial works", and a hint on every block card.
 
-**What you do in one trial (about 2 s):**
-1. Phone in the stand at 40 cm, landscape, at eye height. Look at the **centre of the screen** for the
-   whole block; do not follow anything with your eyes.
-2. **Ring = get ready**: a small dark ring flashes in the centre (0.2 s). Keep looking at that spot.
-3. **Two very short flashes**, half a second apart (each about 1/15 s). A faint striped patch appears
-   in the centre in **exactly one** of them.
-   - Block 1 "Single target": the other flash shows nothing → "patch, then nothing" or "nothing, then patch".
-   - Blocks 2–4: bright helper patches (2 or 8) around the centre appear in **both** flashes. Ignore
-     them; only the faint centre patch counts. They also show you when the flashes happen.
-4. **Answer**: a faint "1" (left half) and "2" (right half) appear with the prompt "Which flash had the
-   centre patch?". Tap **left** = patch was in the **first** flash, **right** = in the **second**.
-5. **Feedback**: high beep + green ring = correct, low buzz + red ring = wrong. The next trial starts
-   by itself.
-6. It adapts: two correct → fainter, one wrong → stronger. Soon you are unsure about a third of the
-   time; that is intended. **Always guess.**
-7. Between blocks a card shows the threshold and valid/invalid counts → **Next block**.
+**What you do in one round (about 2 s):** every block card shows two example pictures of what to look for.
+1. Phone in the stand at 40 cm, landscape. Keep your eyes on the **middle** of the screen.
+2. A small dark circle appears in the middle = "look here now".
+3. Then come **two short moments**, half a second apart. Striped blobs pop up at those moments.
+4. Your job: find the faint patch **in the middle**. It is there at only **one** of the two moments.
+   - Block 1: the patch pops up only once → was it early (left) or late (right)?
+   - Blocks 2–4: helper blobs pop up **both** times, so the two moments look almost the same. Look at
+     the middle: one time there is a **gap** (empty), the other time the gap is **filled** (the blobs
+     merge into one long band). Pick the time when the middle was filled.
+5. The screen then shows 1 (left) and 2 (right): tap **left** = first time, **right** = second time.
+6. Beep + green circle = right, buzz + red circle = wrong. It gets fainter after two right answers, so
+   you will soon be guessing often. That is intended; always pick one.
 
 **Steps:**
 1. Open `https://<your-site>/#train?quick=1&trials=6` → read "How a trial works" → **Start**.

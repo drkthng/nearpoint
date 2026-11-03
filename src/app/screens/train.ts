@@ -20,6 +20,7 @@ import { measureRefreshNow, waitFrames } from "../frames";
 import { playFrames } from "../player";
 import { keepScreenOn } from "../wake-lock";
 import { BLOCK_HINT, RESPONSE_PROMPT, trialInstructions } from "../instructions";
+import { blockExamples } from "../examples";
 
 const CONDITION_WORDS: Record<Condition, string> = {
   SINGLE: "Single target",
@@ -420,7 +421,8 @@ async function runTrain(
         CONDITION_WORDS[block.condition],
         `${block.trials} trials`,
         BLOCK_HINT[block.condition],
-        "Look at the centre. Left half = patch in the FIRST flash, right half = SECOND flash. Always guess.",
+        blockExamples(block, thetaDeg, lam, Math.min(170, window.innerHeight * 0.4)),
+        "(In the pictures the middle pattern is stronger than in the task; it will get fainter as you go.)",
         ...notes,
       );
       const blockRow: BlockRow = {
