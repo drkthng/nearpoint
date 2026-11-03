@@ -21,6 +21,8 @@ npm run dev        # add -- --host to open it from the phone (S24) on the same n
 5. Sessions commit straight to `main`; CI runs typecheck, tests and build on every push.
 
 ## Install on the phone (Galaxy S24, Chrome)
+Full hands-on checklist with expected values: `docs/operator-tests.md`.
+
 nearpoint is a Progressive Web App: after the first load it runs fully offline, and all data stays on the
 phone (IndexedDB). Installing, offline use, fullscreen and the screen wake lock need a **secure origin**
 (HTTPS, or `localhost`), so serve a build over HTTPS (see Deploy below).
