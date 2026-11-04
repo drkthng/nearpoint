@@ -58,7 +58,8 @@ export async function renderContrast(ctx: AppContext, root: HTMLElement, query: 
   root.append(
     h("h1", {}, "Contrast sensitivity"),
     h("section", { class: "card" },
-      h("p", {}, `A faint striped patch appears in one of two flashes (each ${CONTRAST_TEST.durMs} ms). Tap the left half if it was in the first, the right half if in the second (or keys 1 / 2).`),
+      h("p", {}, "Like training block 1: each round, a small dark circle appears in the middle, then a faint stripy patch pops up in the middle ONCE — at the first moment or at the second moment, half a second later."),
+      h("p", {}, "Tap the LEFT half if it came first, the RIGHT half if it came second (or keys 1 / 2). It gets fainter as you go; always guess."),
       h("p", {}, `Three runs: ${CONTRAST_TEST_CPD.join(", ")} cycles/degree, about 3 minutes each. Guess when unsure. There is no feedback during this test.`),
       h("p", {}, `Phone in the stand at ${cal.distanceCm} cm, brightness at maximum, dim room.`),
       ...(quick ? [h("p", { class: "small" }, `Quick test run: ${String(maxTrials)} trials per run.`)] : [])),
@@ -129,7 +130,10 @@ export async function renderContrast(ctx: AppContext, root: HTMLElement, query: 
         position: "fixed", top: "0", bottom: "0", [side]: "0", width: "50%", minHeight: "0", borderRadius: "0",
         background: "transparent", border: "1px solid rgba(0,0,0,0.15)", color: "rgba(0,0,0,0.35)", fontSize: "20vh", zIndex: "20",
       });
-    const responseUi = overlay(run, root, h("div", {}, half("1", "left", 1), half("2", "right", 2)), { inset: "0", zIndex: "20", display: "none" });
+    const prompt = css(h("div", {}, "When did the patch pop up?  Left = first time · Right = second time"), {
+      position: "fixed", left: "0", right: "0", top: "12%", textAlign: "center", zIndex: "25", font: "20px system-ui, sans-serif", color: "rgba(0,0,0,0.6)", pointerEvents: "none",
+    });
+    const responseUi = overlay(run, root, h("div", {}, half("1", "left", 1), half("2", "right", 2), prompt), { inset: "0", zIndex: "20", display: "none" });
     const onKey = (ev: KeyboardEvent): void => {
       if (ev.key === "1" || ev.key === "ArrowLeft") respond(1);
       else if (ev.key === "2" || ev.key === "ArrowRight") respond(2);
