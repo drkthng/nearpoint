@@ -10,7 +10,9 @@ interface Trial {
 interface Block { id: number; sessionId: number; blockIndex: number; validTrials: number; invalidTrials: number; trialsPlanned: number }
 interface Session { id: number; status: string; abortReason?: string; rngSeed?: number }
 
-test.use(PHONE);
+// DPR 1: SwiftShader on a 2-core CI runner cannot render 2402 × 1082 px at 60 Hz, which made every trial
+// invalid. Valid and invalid trials are what this test needs; the stalls below still create invalid ones.
+test.use({ ...PHONE, deviceScaleFactor: 1 });
 
 test("scripted training session: timing logs stored, invalid trials excluded", async ({ page }, info) => {
   const errs = watchErrors(page);
