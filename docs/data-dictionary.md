@@ -60,6 +60,7 @@ data, so call `requestPersistence()` at first run and export backups regularly.
 | `abort_reason` | string | | Why the session was aborted; empty otherwise. |
 | `rng_seed` | integer | | Seed of the session's mulberry32 stream (trial draws); empty for older sessions. |
 | `app_version` | string | | App version that ran the session; empty for older sessions. |
+| `interval_ticks` | boolean | | 1 if a soft tick marked each interval onset; empty for sessions before the setting existed. |
 
 ## blocks.csv
 

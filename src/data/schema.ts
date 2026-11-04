@@ -37,6 +37,8 @@ export interface SessionRow {
   /** Seed of the session's mulberry32 stream, so plans/trials can be replayed. */
   rngSeed?: number;
   appVersion?: string;
+  /** Interval ticks (sound at each interval onset) were on; undefined for sessions before the setting existed. */
+  intervalTicks?: boolean;
 }
 
 export interface BlockRow {

@@ -13,7 +13,7 @@ import type { BlockRow, SessionRow, TrialRow } from "../../data/schema";
 import { toStoredTiming } from "../../data/timing-record";
 import { DEFAULT_MEAN_LUMINANCE } from "../../render/cpu";
 import { WebGLStimulusRenderer, fitCanvasToDevicePixels } from "../../render/webgl";
-import { createFeedbackAudio } from "../audio";
+import { createFeedbackAudio, intervalOnsets, intervalTicksEnabled, setIntervalTicks } from "../audio";
 import type { AppContext } from "../context";
 import { clear, h } from "../dom";
 import { measureRefreshNow, waitFrames } from "../frames";
@@ -139,6 +139,7 @@ async function runTrain(
 
   // ---- pre-session screen ----
   const startBtn = h("button", { class: "primary" }, "Start");
+  const ticksBox = h("input", { type: "checkbox", checked: intervalTicksEnabled(), onchange: () => setIntervalTicks(ticksBox.checked) });
   root.append(
     h("h1", {}, `Session ${plan.sessionIndex + 1}`),
     h(
@@ -150,6 +151,7 @@ async function runTrain(
       h("ol", {}, ...blocks.map((b) => h("li", {}, `${CONDITION_WORDS[b.condition]}, ${b.trials} trials`))),
     ),
     h("p", {}, "Phone in the stand at 40 cm, brightness at maximum, dim room."),
+    h("label", { class: "check" }, ticksBox, " Soft tick at each of the two moments (helps you know when to look)"),
     // Open by default for the first sessions; always available.
     h("details", { class: "card", open: history.length < 3 },
       h("summary", {}, "How a trial works (read before your first session)"),
@@ -170,6 +172,7 @@ async function runTrain(
 
   // ---- start (user gesture) ----
   const audio = createFeedbackAudio();
+  const ticks = ticksBox.checked;
   audio.unlock();
   const releaseWakeLock = keepScreenOn();
   try {
@@ -403,6 +406,7 @@ async function runTrain(
       reason: plan.reason,
       rngSeed,
       appVersion: ctx.appVersion,
+      intervalTicks: ticks,
     };
     const sessionId = await race(ctx.db.add("sessions", sessionRow));
     sessionRow = { ...sessionRow, id: sessionId };
@@ -493,6 +497,7 @@ async function runTrain(
           nFlankers: block.n_flankers,
         };
         const frames = expandFrames(s.plan);
+        const onsets = new Set(intervalOnsets(frames));
         controller = new AbortController();
         let t0 = 0;
         let log: TrialTimingLog;
@@ -501,9 +506,11 @@ async function runTrain(
             frames,
             hz,
             signal: controller.signal,
-            drawFrame: (f) => {
+            drawFrame: (f, k) => {
               gl.draw({ patches: framePatches(f, lp), lambdaPx: lam, sigmaPx: sigma, carrierRad: carrier, mean: DEFAULT_MEAN_LUMINANCE, seed: nextDitherSeed() });
               setFixation(f.showFixation);
+              // The frame drawn now becomes visible at the next vsync; audio output adds its own latency.
+              if (ticks && onsets.has(k)) audio.tick();
             },
             drawEnd: () => {
               drawBlank();

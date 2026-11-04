@@ -124,6 +124,7 @@ export const SESSION_COLUMNS: readonly CsvColumn<SessionRow>[] = [
   { name: "abort_reason", get: (r) => r.abortReason },
   { name: "rng_seed", get: (r) => r.rngSeed },
   { name: "app_version", get: (r) => r.appVersion },
+  { name: "interval_ticks", get: (r) => r.intervalTicks },
 ];
 
 export const BLOCK_COLUMNS: readonly CsvColumn<BlockRow>[] = [
