@@ -1,4 +1,5 @@
-import { thresholdChartSvg, type ChartSeries } from "../../core/chart";
+import { thresholdChartSvg, valueChartSvg, type ChartSeries } from "../../core/chart";
+import { outcomeProgress } from "../../core/outcome/progress";
 import type { BlockRow, OutcomeTestRow, SessionRow } from "../../data/schema";
 import { OUTCOME_KIND_LABEL, isTestRun, outcomeHeadline } from "./outcome-menu";
 import type { AppContext } from "../context";
@@ -61,6 +62,7 @@ export async function renderHistory(ctx: AppContext, root: HTMLElement): Promise
       : []),
     h("p", { class: "small" }, "Lower is better. cpd changes make thresholds jump."),
     h("h2", {}, "Outcome tests"),
+    ...outcomeCharts(outcomes),
     outcomes.length === 0
       ? h("p", {}, "No outcome tests yet.")
       : h("div", { class: "scroll" }, h("table", {},
@@ -71,4 +73,19 @@ export async function renderHistory(ctx: AppContext, root: HTMLElement): Promise
             h("td", {}, outcomeHeadline(r))))))),
     h("button", { onclick: () => ctx.navigate("start") }, "Back"),
   );
+}
+
+/** Charts of the outcome measures over test days (only when there is something to draw). */
+function outcomeCharts(rows: readonly OutcomeTestRow[]): HTMLElement[] {
+  const p = outcomeProgress(rows);
+  const out: HTMLElement[] = [];
+  const add = (svg: string) => {
+    const el = h("div", { class: "chart" });
+    el.innerHTML = svg; // our own escaped SVG output
+    out.push(el);
+  };
+  if (p.acuity.length) add(valueChartSvg(p.acuity, { title: "Near acuity (lower is better)", yLabel: "logMAR", xLabels: p.days, invertY: true }));
+  if (p.reading.length) add(valueChartSvg(p.reading, { title: "Maximum reading speed", yLabel: "words/min", xLabels: p.days, decimals: 0 }));
+  if (p.contrast.length) add(valueChartSvg(p.contrast, { title: "Contrast sensitivity (higher is better)", yLabel: "log CS", xLabels: p.days }));
+  return out;
 }
