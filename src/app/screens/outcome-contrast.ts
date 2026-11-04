@@ -74,7 +74,7 @@ export async function renderContrast(ctx: AppContext, root: HTMLElement, query: 
     clear(root);
 
     const canvas = document.createElement("canvas");
-    overlay(run, root, canvas, { inset: "0", width: "100vw", height: "100vh", display: "block", background: BG });
+    overlay(run, root, canvas, { inset: "0", width: "100%", height: "100%", display: "block", background: BG });
     let cw = canvas.width;
     let ch = canvas.height;
     // A resize/rotation or hidden page invalidates the trial in progress, also while waiting for the answer.

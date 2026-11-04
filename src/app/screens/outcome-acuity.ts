@@ -155,7 +155,7 @@ async function runAcuity(
 ) {
   void ctx;
   const canvas = document.createElement("canvas");
-  overlay(run, root, canvas, { inset: "0", width: "100vw", height: "100vh", display: "block", background: "#fff" });
+  overlay(run, root, canvas, { inset: "0", width: "100%", height: "100%", display: "block", background: "#fff" });
   let resized = false;
   // Resizing (rotation) clears the canvas: redraw what was on screen; a time-limited presentation in
   // progress is aborted and repeated.
@@ -231,7 +231,7 @@ async function runAcuity(
       fontSize: "28px", minWidth: "64px", minHeight: "56px",
     }) as HTMLButtonElement;
   const keypad = overlay(run, root, h("div", {}, progress, h("div", {}, ...SLOAN_LETTERS.map((l) => key(l, l)), key("?", "?"), key("⌫", "back"))), {
-    left: "0", right: "0", bottom: "0", height: `${Math.round((1 - LETTER_AREA) * 100)}vh`, zIndex: "20", background: "#eee",
+    left: "0", right: "0", bottom: "0", height: `${Math.round((1 - LETTER_AREA) * 100)}%`, zIndex: "20", background: "#eee",
     display: "none", textAlign: "center", padding: "0.5rem", boxSizing: "border-box", overflow: "auto",
   });
   css(keypad.lastElementChild as HTMLElement, { display: "flex", flexWrap: "wrap", gap: "0.4rem", justifyContent: "center" });
@@ -244,7 +244,7 @@ async function runAcuity(
   window.addEventListener("keydown", onKey);
   run.onCleanup(() => window.removeEventListener("keydown", onKey));
   const message = overlay(run, root, h("div", {}), {
-    left: "0", right: "0", top: `${Math.round(LETTER_AREA * 85)}vh`, textAlign: "center", zIndex: "30", font: "20px system-ui, sans-serif", color: "#b3261e", pointerEvents: "none",
+    left: "0", right: "0", top: `${Math.round(LETTER_AREA * 85)}%`, textAlign: "center", zIndex: "30", font: "20px system-ui, sans-serif", color: "#b3261e", pointerEvents: "none",
   });
 
   /** Collects n letters (with backspace). onChange(k) is called with the number entered so far. */

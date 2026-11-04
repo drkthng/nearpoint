@@ -57,7 +57,7 @@ export async function renderReading(ctx: AppContext, root: HTMLElement, query: U
     clear(root);
 
     const canvas = document.createElement("canvas");
-    overlay(run, root, canvas, { inset: "0", width: "100vw", height: "100vh", display: "block", background: "#fff" });
+    overlay(run, root, canvas, { inset: "0", width: "100%", height: "100%", display: "block", background: "#fff" });
     // Rotation (resize) or leaving the app while a sentence is shown: that sentence is not counted.
     let cancelReading: (() => void) | null = null;
     run.onCleanup(fitCanvasToDevicePixels(canvas, () => cancelReading?.()));

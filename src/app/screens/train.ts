@@ -185,7 +185,7 @@ async function runTrain(
   document.body.classList.add("training");
   clear(root);
   const canvas = document.createElement("canvas");
-  style(canvas, { position: "fixed", inset: "0", width: "100vw", height: "100vh", display: "block", background: OVERLAY_BG });
+  style(canvas, { position: "fixed", inset: "0", width: "100%", height: "100%", display: "block", background: OVERLAY_BG });
   root.append(canvas);
   let cw = 0;
   let ch = 0;
