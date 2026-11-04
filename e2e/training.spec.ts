@@ -10,24 +10,28 @@ interface Trial {
 interface Block { id: number; sessionId: number; blockIndex: number; validTrials: number; invalidTrials: number; trialsPlanned: number }
 interface Session { id: number; status: string; abortReason?: string; rngSeed?: number }
 
-// DPR 1: SwiftShader on a 2-core CI runner cannot render 2402 × 1082 px at 60 Hz, which made every trial
-// invalid. Valid and invalid trials are what this test needs; the stalls below still create invalid ones.
-test.use({ ...PHONE, deviceScaleFactor: 1 });
+// Simulated frame clock. A shared CI machine renders SwiftShader too slowly for real 60 Hz, which made
+// every trial invalid (flaky). Here rAF still paces the frames, but the timestamps it reports follow a
+// perfect 60 Hz clock with one deliberately late frame (+50 ms, > 1.5 × 16.7 ms) every 200 frames.
+// So both valid and invalid trials occur on any machine, and the test checks how they are logged and
+// excluded. Real hardware timing is checked on the phone (docs/operator-tests.md).
+test.use(PHONE);
 
 test("scripted training session: timing logs stored, invalid trials excluded", async ({ page }, info) => {
   const errs = watchErrors(page);
+  await page.addInitScript(() => {
+    const real = window.requestAnimationFrame.bind(window);
+    let n = 0;
+    let t = performance.now();
+    window.requestAnimationFrame = (cb: FrameRequestCallback): number =>
+      real(() => {
+        n++;
+        t += n % 200 === 0 ? 50 : 1000 / 60;
+        cb(t);
+      });
+  });
   await calibrate(page);
 
-  // Stall the main thread for 60 ms every 2.5 s so some trials get a late frame (invalid), on top of
-  // whatever SwiftShader produces; trials without a stall stay valid.
-  await page.evaluate(() => {
-    setInterval(() => {
-      const t = performance.now();
-      while (performance.now() - t < 60) {
-        /* busy */
-      }
-    }, 2500);
-  });
   await page.evaluate(() => {
     location.hash = "#train?quick=1&auto=1&trials=6";
   });
