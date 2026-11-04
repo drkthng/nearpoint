@@ -9,6 +9,7 @@ import { mulberry32 } from "../../core/rng";
 import type { TrialTimingLog } from "../../core/timing";
 import { toStoredTiming, type StoredTiming } from "../../data/timing-record";
 import { DEFAULT_MEAN_LUMINANCE } from "../../render/cpu";
+import { createFeedbackAudio, intervalOnsets, intervalTicksEnabled, setIntervalTicks } from "../audio";
 import { WebGLStimulusRenderer, fitCanvasToDevicePixels } from "../../render/webgl";
 import type { AppContext } from "../context";
 import { clear, h } from "../dom";
@@ -55,6 +56,7 @@ export async function renderContrast(ctx: AppContext, root: HTMLElement, query: 
   if (!cal) return;
 
   const startBtn = h("button", { class: "primary" }, "Start");
+  const ticksBox = h("input", { type: "checkbox", checked: intervalTicksEnabled(), onchange: () => setIntervalTicks(ticksBox.checked) });
   root.append(
     h("h1", {}, "Contrast sensitivity"),
     h("section", { class: "card" },
@@ -62,6 +64,7 @@ export async function renderContrast(ctx: AppContext, root: HTMLElement, query: 
       h("p", {}, "Tap the LEFT half if it came first, the RIGHT half if it came second (or keys 1 / 2). It gets fainter as you go; always guess."),
       h("p", {}, `Three runs: ${CONTRAST_TEST_CPD.join(", ")} cycles/degree, about 3 minutes each. Guess when unsure. There is no feedback during this test.`),
       h("p", {}, `Phone in the stand at ${cal.distanceCm} cm, brightness at maximum, dim room.`),
+      h("label", { class: "check" }, ticksBox, " Soft tick at each of the two moments (use the same setting every time you repeat this test)"),
       ...(quick ? [h("p", { class: "small" }, `Quick test run: ${String(maxTrials)} trials per run.`)] : [])),
     h("div", { class: "row" }, startBtn, h("button", { onclick: () => ctx.navigate("tests") }, "Back")),
   );
@@ -70,6 +73,9 @@ export async function renderContrast(ctx: AppContext, root: HTMLElement, query: 
     const clicked = new Promise<void>((res) => startBtn.addEventListener("click", () => res(), { once: true }));
     if (auto) startBtn.click();
     await run.race(clicked);
+    const ticks = ticksBox.checked;
+    const audio = createFeedbackAudio();
+    audio.unlock(); // user gesture
     enterTestDisplay(run);
     clear(root);
 
@@ -176,6 +182,7 @@ export async function renderContrast(ctx: AppContext, root: HTMLElement, query: 
       while (!st.done) {
         const t = st.next();
         const frames = contrastTestFrames(hz, t.targetInterval);
+        const onsets = new Set(intervalOnsets(frames));
         const ctl = new AbortController();
         run.abort.add(ctl);
         let t0 = 0;
@@ -185,7 +192,8 @@ export async function renderContrast(ctx: AppContext, root: HTMLElement, query: 
             frames,
             hz,
             signal: ctl.signal,
-            drawFrame: (f) => {
+            drawFrame: (f, k) => {
+              if (ticks && onsets.has(k)) audio.tick();
               gl.draw({
                 patches: f.showTarget ? [{ x: cw / 2, y: ch / 2, contrast: t.contrast }] : [],
                 lambdaPx: lam, sigmaPx: lam, carrierRad: carrier, mean: DEFAULT_MEAN_LUMINANCE, seed: nextSeed(),
@@ -245,7 +253,7 @@ export async function renderContrast(ctx: AppContext, root: HTMLElement, query: 
     run.dispose();
     clear(root);
 
-    const summary: Record<string, number | string | null> = { hz, durationMs: CONTRAST_TEST.durMs, distanceCm: cal.distanceCm };
+    const summary: Record<string, number | string | null> = { hz, durationMs: CONTRAST_TEST.durMs, distanceCm: cal.distanceCm, intervalTicks: ticks ? 1 : 0 };
     for (const r of results) {
       summary[`threshold${r.cpd}`] = r.threshold;
       summary[`logCS${r.cpd}`] = r.logCS === null ? null : Math.round(r.logCS * 1000) / 1000;

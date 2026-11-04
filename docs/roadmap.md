@@ -137,6 +137,4 @@ Open issues not owned by a scheduled session. Add `(from S<n>)`; remove when res
   S5 calibration must not assume a pixel pitch; S7 writes Android install notes; S8 should emulate a
   phone viewport in landscape. (from S2)
 - Crowding layouts with more than 8 flankers are undefined. (from S1)
-- Interval markers: in SINGLE blocks nothing marks when the two intervals happen; a soft tick at each
-  interval onset would help at low contrast (needs the operator's decision; would go under "Our choices"). (from S9)
 - `fitCanvasToDevicePixels()` has no direct test; the WebGL draw path is covered by `e2e/render.spec.ts` (S8). (from S1)

@@ -20,6 +20,14 @@ test.use(PHONE);
 test("scripted training session: timing logs stored, invalid trials excluded", async ({ page }, info) => {
   const errs = watchErrors(page);
   await page.addInitScript(() => {
+    // Count interval ticks (1.2 kHz tones) as they are started.
+    const w = window as unknown as { __ticks: number };
+    w.__ticks = 0;
+    const start = OscillatorNode.prototype.start;
+    OscillatorNode.prototype.start = function (this: OscillatorNode, when?: number) {
+      if (Math.round(this.frequency.value) === 1200) w.__ticks++;
+      return start.call(this, when);
+    };
     const real = window.requestAnimationFrame.bind(window);
     let n = 0;
     let t = performance.now();
@@ -60,6 +68,11 @@ test("scripted training session: timing logs stored, invalid trials excluded", a
     expect(t.valid).toBe(t.timing.analysis.valid);
     if (!t.valid) expect(t.timing.analysis.reasons.length).toBeGreaterThan(0);
   }
+
+  // Interval ticks are on by default: two per played round (stored rounds; none were discarded here).
+  expect(await page.evaluate(() => (window as unknown as { __ticks: number }).__ticks)).toBe(2 * trials.length);
+  const sessionTicks = (sessions[0] as unknown as { intervalTicks?: boolean }).intervalTicks;
+  expect(sessionTicks).toBe(true);
 
   const invalid = trials.filter((t) => !t.valid).length;
   const valid = trials.length - invalid;

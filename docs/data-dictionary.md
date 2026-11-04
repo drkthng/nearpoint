@@ -134,5 +134,5 @@ hidden in History.
   (logMAR), `sentences`, `smallestSize`, `distanceCm`. Details: `trials` (logMAR, sentence, ms, errors,
   unreadable, wpm), `font`, `xHeightRatio`, `sizes`, `seed`, `pxPerMm`.
 - Contrast (`contrast`). Summary: `threshold2/4/6` (Michelson contrast), `logCS2/4/6`, `invalid2/4/6`,
-  `hz`, `durationMs`, `distanceCm`. Details: `results` per cpd, `trials` per cpd (contrast,
+  `hz`, `durationMs`, `distanceCm`, `intervalTicks` (1/0). Details: `results` per cpd, `trials` per cpd (contrast,
   targetInterval, response, correct, valid, rtMs, stored timing log), `seed`, `thetaDeg`, `pxPerMm`.
