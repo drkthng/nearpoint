@@ -2,7 +2,7 @@
  * Near letter acuity (outcome test). Pure logic: sizes, line sequence, per-letter logMAR scoring.
  * Separate from training code (CLAUDE.md non-negotiable 6): imports nothing from the training engine.
  */
-import { framesFor } from "../geometry";
+import { framesFor, mmPerDegree } from "../geometry";
 import type { FrameSpec } from "../trial";
 import { randomLetters, type SloanLetter } from "./optotypes";
 
@@ -43,9 +43,9 @@ export function marArcmin(logMAR: number): number {
   return 10 ** logMAR;
 }
 
-/** Physical size (mm) of an angle in arcmin at a distance (mm). */
+/** Physical size (mm) of an angle in arcmin at a distance (mm), via the shared geometry (mmPerDegree). */
 export function mmForArcmin(arcmin: number, distanceMm: number): number {
-  return 2 * distanceMm * Math.tan(((arcmin / 60) * Math.PI) / 360);
+  return (arcmin / 60) * mmPerDegree(distanceMm);
 }
 
 /** Letter height (= 5 × MAR) in mm at the viewing distance. */
