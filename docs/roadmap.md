@@ -40,7 +40,7 @@ Read CLAUDE.md and docs/roadmap.md, claim the next eligible session as described
 | S6 | Outcome tests | 2 | S5 | done | `docs/session-notes/S6.md` |
 | S7 | PWA and deployment | 3 | S5 | done | `docs/session-notes/S7.md` |
 | S8 | End-to-end tests in CI | 3 | S5 | done | `docs/session-notes/S8.md` |
-| S9 | Audit | 4 | S1–S8 | next | |
+| S9 | Audit | 4 | S1–S8 | in progress (2026-11-04) | |
 
 Statuses: `blocked` (needs not done), `next` (claimable), `in progress (<date>)`, `done`.
 
