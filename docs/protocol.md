@@ -77,6 +77,7 @@ Blur disc (for reasoning, not used at runtime): `β [rad] ≈ pupil [m] × defoc
 | Outcome: printable chart | A4 SVG in mm, lines +1.0 … −0.2 at the calibrated distance, two fixed letter orders (A, B), 100 mm check bar | −0.3 at 40 cm is ≈ 0.29 mm high, below common print quality |
 | Instructions and practice | Block cards show two example pictures (CPU reference render, target at 50 % so it is easy to see) and a plain-language rule ("middle filled or gap"); "Practice first" runs 6 trials per block, saved as a test run, never counted | Published studies give instructions and practice but do not describe them; a phone user without an experimenter needs pictures |
 | Disturbed rounds | Rotation/resize, a hidden page or a lost GPU context at any point of a round (stimulus or answer phase) discards the round (not stored, staircase unchanged) and pauses | A round the participant did not fully see, or answered on a blank screen, carries no information |
+| Outcome-test schedule | Baseline before training session 1, again after every 10 completed sessions, and at program end; the start screen shows when they are due | Published studies test before and after training; intermediate points every 10 sessions show the time course |
 
 ## Open questions
 - Exact SF-step criterion and plateau rule used commercially.
