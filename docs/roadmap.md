@@ -40,7 +40,7 @@ Read CLAUDE.md and docs/roadmap.md, claim the next eligible session as described
 | S6 | Outcome tests | 2 | S5 | done | `docs/session-notes/S6.md` |
 | S7 | PWA and deployment | 3 | S5 | done | `docs/session-notes/S7.md` |
 | S8 | End-to-end tests in CI | 3 | S5 | done | `docs/session-notes/S8.md` |
-| S9 | Audit | 4 | S1–S8 | in progress (2026-11-04) | |
+| S9 | Audit | 4 | S1–S8 | done | `docs/session-notes/S9.md` |
 
 Statuses: `blocked` (needs not done), `next` (claimable), `in progress (<date>)`, `done`.
 
@@ -120,6 +120,10 @@ Facts a later session needs that are not obvious from the code. Append under you
   `@playwright/test` is pinned to its version). Screenshots per case are in the CI artefact
   `e2e-screenshots-and-report`.
 
+### From S9
+- **Operator**: the baseline outcome tests and steps F–H of `docs/operator-tests.md` are still open.
+- Replay from `rngSeed` is not exact when rounds were discarded (finding 6).
+
 ## Backlog
 
 Open issues not owned by a scheduled session. Add `(from S<n>)`; remove when resolved, saying where.
@@ -133,4 +137,6 @@ Open issues not owned by a scheduled session. Add `(from S<n>)`; remove when res
   S5 calibration must not assume a pixel pitch; S7 writes Android install notes; S8 should emulate a
   phone viewport in landscape. (from S2)
 - Crowding layouts with more than 8 flankers are undefined. (from S1)
+- Interval markers: in SINGLE blocks nothing marks when the two intervals happen; a soft tick at each
+  interval onset would help at low contrast (needs the operator's decision; would go under "Our choices"). (from S9)
 - `fitCanvasToDevicePixels()` has no direct test; the WebGL draw path is covered by `e2e/render.spec.ts` (S8). (from S1)
